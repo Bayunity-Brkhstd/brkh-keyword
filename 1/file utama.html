@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StockMeta AI - Microstock Batch Metadata Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .badge-chip:hover .badge-delete {
+            opacity: 1;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                border-color: rgba(99, 102, 241, 0.4);
+            }
+
+            50% {
+                border-color: rgba(99, 102, 241, 0.9);
+            }
+        }
+
+        .processing-pulse {
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <i class="fa-solid fa-tags text-white text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold tracking-tight text-white text-base sm:text-lg">StockMeta<span
+                                class="text-indigo-400">.AI</span></span>
+                        <span
+                            class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gemini
+                            3 Flash</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Microstock Multimodal Metadata Studio & Batch
+                        Curator</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Marketplace Preset Selector -->
+                <div class="flex items-center bg-slate-800/80 border border-slate-700/80 rounded-lg p-1">
+                    <label for="platformPreset" class="text-xs text-slate-400 px-2 font-medium hidden md:block">
+                        <i class="fa-solid fa-store mr-1 text-slate-400"></i>Preset:
+                    </label>
+                    <select id="platformPreset"
+                        class="bg-transparent text-xs text-slate-200 font-semibold focus:outline-none pr-2 py-1 cursor-pointer">
+                        <option value="universal" class="bg-slate-900">Universal (Adobe & Shutter)</option>
+                        <option value="adobestock" class="bg-slate-900">Adobe Stock (Max 49 tags)</option>
+                        <option value="shutterstock" class="bg-slate-900">Shutterstock (Max 50 tags)</option>
+                        <option value="freepik" class="bg-slate-900">Freepik (Strict Style Tags)</option>
+                        <option value="getty" class="bg-slate-900">iStock / Getty (Concise)</option>
+                    </select>
+                </div>
+
+                <button id="btnSettings"
+                    class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                    title="Pengaturan Konkurensi & Prompt">
+                    <i class="fa-solid fa-sliders text-sm"></i>
+                </button>
+
+                <button id="btnLoadDemo"
+                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span class="hidden sm:inline">Load Sample</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+        <!-- Top Dashboard Stats & Global Controls -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-images"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Total Aset</div>
+                    <div id="statTotal" class="text-lg font-bold text-white">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Selesai Dikurasi</div>
+                    <div id="statCompleted" class="text-lg font-bold text-emerald-400">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-spinner animate-spin"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Sedang Diproses</div>
+                    <div id="statProcessing" class="text-lg font-bold text-amber-400">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Worker Paralel</div>
+                    <div id="statConcurrency" class="text-lg font-bold text-blue-400">3 Threads</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dropZone"
+            class="relative group border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-900/40 hover:bg-slate-900/80 transition duration-200 rounded-2xl p-6 sm:p-8 text-center cursor-pointer">
+            <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,image/jpg"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+            <div class="flex flex-col items-center justify-center gap-3 pointer-events-none">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition scale-100 group-hover:scale-110">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-200 text-sm sm:text-base">Tarik & Letakkan Gambar di Sini (Batch
+                        1-20 Gambar)</h3>
+                    <p class="text-xs text-slate-400 mt-1">Mendukung JPG, PNG, WebP. Sistem otomatis membaca visual,
+                        teks, style, dan konteks komersial.</p>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                    <span
+                        class="inline-flex items-center gap-1 text-[11px] font-medium bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> Anti Trademark Spammer
+                    </span>
+                    <span
+                        class="inline-flex items-center gap-1 text-[11px] font-medium bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
+                        <i class="fa-solid fa-code text-indigo-400"></i> JSON Structured Schema
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 sm:p-4 rounded-xl">
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button id="filterAll"
+                    class="filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white">
+                    Semua (<span id="countAll">0</span>)
+                </button>
+                <button id="filterQueued"
+                    class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    Antrean (<span id="countQueued">0</span>)
+                </button>
+                <button id="filterCompleted"
+                    class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    Selesai (<span id="countDone">0</span>)
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="btnProcessQueue"
+                    class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-lg shadow-md shadow-indigo-600/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Mulai Batch Processing</span>
+                </button>
+                <button id="btnExportCSV"
+                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-csv text-emerald-400"></i>
+                    <span>Ekspor CSV</span>
+                </button>
+                <button id="btnExportJSON"
+                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-code text-amber-400"></i>
+                    <span>JSON</span>
+                </button>
+                <button id="btnClearAll"
+                    class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
+                    title="Bersihkan Semua">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Overall Batch Progress Bar -->
+        <div id="batchProgressWrapper" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+            <div class="flex justify-between text-xs">
+                <span class="text-slate-300 font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-gear fa-spin text-indigo-400"></i>
+                    <span id="batchProgressStatus">Memproses antrean paralel...</span>
+                </span>
+                <span id="batchProgressPercent" class="font-mono text-indigo-400 font-bold">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="batchProgressBar"
+                    class="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all duration-300 w-0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State (diletakkan terpisah dari assetsGrid agar tidak terhapus saat re-render) -->
+        <div id="emptyState"
+            class="py-16 text-center border border-slate-800/80 bg-slate-900/30 rounded-2xl flex flex-col items-center justify-center">
+            <div class="w-16 h-16 rounded-full bg-slate-800/60 flex items-center justify-center text-slate-500 mb-3">
+                <i class="fa-regular fa-folder-open text-2xl"></i>
+            </div>
+            <h4 class="text-sm font-semibold text-slate-300">Belum Ada Gambar yang Dimuat</h4>
+            <p class="text-xs text-slate-500 mt-1 max-w-sm">Unggah file gambar microstock Anda atau klik tombol "Load
+                Sample" di sudut kanan atas untuk menguji coba.</p>
+        </div>
+
+        <div id="assetsGrid" class="space-y-4"></div>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i> Konfigurasi Kurasi
+                </h3>
+                <button id="btnCloseSettings" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Batas Concurrency (Paralel Worker)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="concurrencyRange" min="1" max="5" value="3"
+                            class="w-full accent-indigo-500 bg-slate-800" />
+                        <span id="concurrencyVal" class="font-mono font-bold text-indigo-400 text-sm w-8">3</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Mengatur jumlah permintaan bersamaan untuk menghindari
+                        rate limit API.</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Target Jumlah Keywords</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[11px] text-slate-400">Min:</span>
+                            <input type="number" id="minKeywordsInput" value="35" min="30" max="40"
+                                class="w-full mt-0.5 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono" />
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-400">Maks:</span>
+                            <input type="number" id="maxKeywordsInput" value="45" min="40" max="50"
+                                class="w-full mt-0.5 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono" />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Instruksi Tambahan / Gaya Khusus</label>
+                    <textarea id="customPromptNotes" rows="2"
+                        placeholder="Contoh: Tekankan jika ini gaya 3D Clay, isometric, atau banner e-commerce Ramadan..."
+                        class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button id="btnSaveSettings"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Simpan
+                        Pengaturan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification System (No alerts) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        /* State variables */
+        const state = {
+            assets: [],
+            isProcessing: false,
+            concurrencyLimit: 3,
+            minKeywords: 35,
+            maxKeywords: 45,
+            customNotes: "",
+            filter: "all",
+            preset: "universal"
+        };
+
+        // Preset configurations for microstock platforms
+        const PRESETS = {
+            universal: {
+                minTitleLen: 60,
+                maxTitleLen: 90,
+                maxKeywords: 45,
+                minKeywords: 35,
+                name: "Universal Microstock (Adobe, Shutterstock, Freepik, Getty)"
+            },
+            adobestock: {
+                minTitleLen: 60,
+                maxTitleLen: 90,
+                maxKeywords: 45,
+                minKeywords: 35,
+                name: "Adobe Stock"
+            },
+            shutterstock: {
+                minTitleLen: 60,
+                maxTitleLen: 90,
+                maxKeywords: 45,
+                minKeywords: 35,
+                name: "Shutterstock"
+            },
+            freepik: {
+                minTitleLen: 60,
+                maxTitleLen: 85,
+                maxKeywords: 45,
+                minKeywords: 35,
+                name: "Freepik"
+            },
+            getty: {
+                minTitleLen: 60,
+                maxTitleLen: 90,
+                maxKeywords: 40,
+                minKeywords: 35,
+                name: "iStock / Getty"
+            }
+        };
+
+        // System prompt implementing world-class curation guidelines
+        const getSystemPrompt = () => {
+            return `Kamu adalah kurator metadata aset microstock profesional kelas dunia untuk agensi terkemuka (Adobe Stock, Shutterstock, Freepik, Getty Images).
+
+TUGAS UTAMA:
+Menganalisis gambar aset digital secara visual dan menghasilkan metadata komersial yang presisi, relevan, dan terbebas dari pelanggaran hak cipta.
+
+ATURAN TITLE:
+- Buat 1 judul deskriptif bahasa Inggris dengan panjang antara 60 sampai 90 karakter.
+- Wajib gunakan pola judul: [Karakteristik Visual Utama / Subjek] + [Gaya / Format Aset] + [Konteks Penggunaan].
+  (Contoh: "Gold Trophy on Podium 3D Render for Achievement Celebration Award")
+- Hindari keyword stuffing (dilarang menumpuk kata yang sama).
+- Jangan gunakan tanda baca aneh atau simbol berlebihan (hindari: |, !, #, @, emoji).
+
+ATURAN DESCRIPTION:
+- Buat 1-2 kalimat bahasa Inggris yang menjelaskan subjek visual, elemen pendukung, palet/nuansa, dan fleksibilitas penggunaannya untuk proyek komersial.
+
+ATURAN KEYWORDS:
+1. Format Kata Kunci:
+   - Wajib huruf kecil semua (lowercase).
+   - Setiap elemen keyword HARUS berupa 1 KATA TUNGGAL (single word, tanpa spasi). Jika ada konsep gabungan, pecah menjadi kata mandiri yang relevan (misal: "hair cut" -> "hair", "cut"; "barber shop" -> "barbershop", "barber", "shop").
+   - Hapus semua tanda baca, angka, atau simbol (hanya karakter huruf a-z).
+2. Jumlah: Hasilkan tepat antara ${state.minKeywords} sampai ${state.maxKeywords} kata kunci yang unik (tanpa duplikasi).
+3. Hierarki & Urutan Relevansi (Wajib urutkan dari kata 1 sampai selesai):
+   - Level 1 (Kata 1-10): Subjek literal dan teks eksplisit yang terlihat pada gambar.
+   - Level 2 (Kata 11-20): Gaya desain, estetika visual, palet warna dominan, dan format teknis (contoh: vector, editable, vintage, blue, typography).
+   - Level 3 (Kata 21-35): Objek pendukung, metafora, dan elemen sekunder di latar belakang.
+   - Level 4 (Kata 36-selesai): Kasus penggunaan komersial dan target media (contoh: banner, poster, signage, branding, template).
+4. Larangan Mutlak (Negative Rules):
+   - Dilarang menyertakan nama merek dagang/brand/trademark (contoh: Photoshop, Illustrator, Apple, Instagram).
+   - Dilarang menyertakan kata-kata tidak bermakna seperti 'the', 'and', 'image', 'picture', 'photo' (jika aset bukan fotografi).
+   - Dilarang memasukkan kata yang tidak memiliki kaitan visual langsung dengan gambar.
+
+${state.customNotes ? `CATATAN TAMBAHAN DARI PENGGUNA: ${state.customNotes}` : ''}`;
+        };
+
+        // JSON Schema for Gemini generateContent
+        const metadataResponseSchema = {
+            type: "OBJECT",
+            properties: {
+                title: {
+                    type: "STRING",
+                    description: "Descriptive English title between 60-90 characters following pattern [Subject] + [Style/Format] + [Commercial Context]"
+                },
+                description: {
+                    type: "STRING",
+                    description: "1-2 English sentences detailing subject, palette, and commercial application"
+                },
+                assetType: {
+                    type: "STRING",
+                    description: "Technical format (e.g. 3D Render, Vector Illustration, Isolated Mockup, Graphic Template)"
+                },
+                keywords: {
+                    type: "ARRAY",
+                    items: { type: "STRING" },
+                    description: "Strictly 35 to 45 unique lowercase single-word keywords ordered by the 4-level relevance hierarchy without any spaces or symbols"
+                }
+            },
+            required: ["title", "description", "assetType", "keywords"],
+            propertyOrdering: ["title", "description", "assetType", "keywords"]
+        };
+
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const colors = {
+                success: 'border-emerald-500/40 bg-emerald-950/90 text-emerald-200',
+                error: 'border-rose-500/40 bg-rose-950/90 text-rose-200',
+                warning: 'border-amber-500/40 bg-amber-950/90 text-amber-200',
+                info: 'border-indigo-500/40 bg-indigo-950/90 text-indigo-200'
+            };
+
+            const icons = {
+                success: 'fa-circle-check text-emerald-400',
+                error: 'fa-circle-exclamation text-rose-400',
+                warning: 'fa-triangle-exclamation text-amber-400',
+                info: 'fa-circle-info text-indigo-400'
+            };
+
+            toast.className = `pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border backdrop-blur shadow-xl text-xs max-w-sm transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+        <i class="fa-solid ${icons[type]} text-base mt-0.5"></i>
+        <div class="flex-1">
+          <div class="font-bold text-white text-xs">${escapeHtml(title)}</div>
+          <div class="mt-0.5 text-[11px] opacity-90">${escapeHtml(message)}</div>
+        </div>
+      `;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        /* Clipboard copy helper utilizing document.execCommand */
+        function copyToClipboard(text, feedbackMsg = "Tersalin ke clipboard!") {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'absolute';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Sukses Salin', feedbackMsg, 'success');
+            } catch (err) {
+                showToast('Gagal Salin', 'Tidak dapat mengakses papan klip', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        async function callGeminiVision(base64Data, mimeType) {
+            const apiKey = ""; // Runtime automatically injected by Canvas
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            {
+                                text: "Analisis gambar microstock ini secara mendalam. Tentukan assetType, title, description, dan daftar keywords terkurasi sesuai skema JSON."
+                            },
+                            {
+                                inlineData: {
+                                    mimeType: mimeType || "image/jpeg",
+                                    data: base64Data
+                                }
+                            }
+                        ]
+                    }
+                ],
+                systemInstruction: {
+                    parts: [{ text: getSystemPrompt() }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: metadataResponseSchema,
+                    temperature: 0.2
+                }
+            };
+
+            // Exponential backoff logic
+            const maxRetries = 3;
+            let delay = 1000;
+
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && attempt < maxRetries) {
+                            await new Promise(r => setTimeout(r, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    const textPart = candidate?.content?.parts?.[0]?.text;
+
+                    if (!textPart) {
+                        throw new Error("Respon kosong dari model");
+                    }
+
+                    const parsed = JSON.parse(textPart);
+                    return parsed;
+                } catch (error) {
+                    if (attempt === maxRetries) {
+                        throw error;
+                    }
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result;
+                    const base64 = result.split(',')[1];
+                    resolve({ base64, mimeType: file.type || 'image/jpeg' });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleFiles(files) {
+            if (!files || files.length === 0) return;
+            const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+
+            if (validFiles.length === 0) {
+                showToast('Format Tidak Sesuai', 'Harap unggah file gambar (JPG, PNG, WebP)', 'warning');
+                return;
+            }
+
+            for (const file of validFiles) {
+                const previewUrl = URL.createObjectURL(file);
+                const assetId = 'asset_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
+                state.assets.push({
+                    id: assetId,
+                    filename: file.name,
+                    fileSize: (file.size / 1024).toFixed(1) + ' KB',
+                    fileObj: file,
+                    previewUrl: previewUrl,
+                    status: 'queued', // queued, processing, completed, error
+                    errorMsg: null,
+                    title: '',
+                    description: '',
+                    assetType: 'Analyzing...',
+                    keywords: []
+                });
+            }
+
+            updateStats();
+            renderAssets();
+            showToast('Aset Ditambahkan', `${validFiles.length} gambar siap di antrean batch.`, 'info');
+        }
+
+        function renderAssets() {
+            const container = document.getElementById('assetsGrid');
+            const emptyState = document.getElementById('emptyState');
+            if (!container) return;
+
+            let filtered = state.assets;
+            if (state.filter === 'queued') filtered = state.assets.filter(a => a.status === 'queued' || a.status === 'processing');
+            if (state.filter === 'completed') filtered = state.assets.filter(a => a.status === 'completed');
+
+            if (state.assets.length === 0) {
+                container.innerHTML = '';
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+            container.innerHTML = '';
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+          <div class="py-12 text-center border border-slate-800/60 bg-slate-900/30 rounded-2xl text-slate-400 text-xs">
+            <i class="fa-solid fa-filter mr-1.5 text-slate-500"></i> Tidak ada aset pada filter "<strong>${state.filter}</strong>".
+          </div>
+        `;
+                return;
+            }
+
+            filtered.forEach((item, index) => {
+                const card = document.createElement('div');
+                const isProc = item.status === 'processing';
+                const isDone = item.status === 'completed';
+                const isErr = item.status === 'error';
+
+                card.className = `bg-slate-900 border ${isProc ? 'border-indigo-500/80 processing-pulse' : isDone ? 'border-slate-800' : isErr ? 'border-rose-500/60' : 'border-slate-800/80'} rounded-2xl p-4 sm:p-5 transition shadow-lg`;
+                card.id = `card_${item.id}`;
+
+                const statusBadge = isProc
+                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-spinner animate-spin text-[10px]"></i> Menganalisis...</span>`
+                    : isDone
+                        ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-circle-check text-[10px]"></i> Selesai</span>`
+                        : isErr
+                            ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Gagal</span>`
+                            : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700"><i class="fa-solid fa-clock text-[10px]"></i> Menunggu Antrean</span>`;
+
+                card.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+            
+            <!-- Left Thumbnail Column -->
+            <div class="md:col-span-3 flex flex-col gap-2">
+              <div class="relative group rounded-xl overflow-hidden bg-slate-950 aspect-video md:aspect-square flex items-center justify-center border border-slate-800">
+                <img src="${item.previewUrl}" alt="${escapeHtml(item.filename)}" class="w-full h-full object-contain" />
+                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                  <span class="text-[10px] font-mono bg-black/70 backdrop-blur px-2 py-0.5 rounded text-slate-300">${escapeHtml(item.fileSize)}</span>
+                  ${item.assetType && item.assetType !== 'Analyzing...' ? `<span class="text-[10px] font-semibold bg-indigo-600/90 text-white px-2 py-0.5 rounded">${escapeHtml(item.assetType)}</span>` : ''}
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-xs text-slate-400 truncate px-0.5">
+                <span class="truncate font-mono text-[11px]" title="${escapeHtml(item.filename)}">${escapeHtml(item.filename)}</span>
+              </div>
+              <div class="pt-1 flex items-center gap-1.5">
+                ${statusBadge}
+                ${!isProc ? `
+                  <button onclick="processSingleAsset('${item.id}')" class="text-xs px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-lg transition" title="Proses Ulang Item Ini">
+                    <i class="fa-solid fa-rotate-right"></i>
+                  </button>
+                  <button onclick="removeAsset('${item.id}')" class="text-xs px-2.5 py-1 bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white rounded-lg transition" title="Hapus Item">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Right Metadata Inputs Column -->
+            <div class="md:col-span-9 space-y-3.5">
+              
+              <!-- Title Field -->
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <span>Title (Judul Komersial: Subjek + Gaya + Konteks)</span>
+                    <button onclick="copyField('${item.id}', 'title')" class="text-slate-400 hover:text-indigo-400 transition" title="Salin Title">
+                      <i class="fa-regular fa-copy text-[11px]"></i>
+                    </button>
+                  </label>
+                  <span id="titleCount_${item.id}" class="text-[11px] font-mono ${item.title.length >= 60 && item.title.length <= 90 ? 'text-emerald-400 font-semibold' : item.title.length > 90 ? 'text-amber-400 font-bold' : 'text-slate-400'}">
+                    ${item.title.length}/60-90 Karakter
+                  </span>
+                </div>
+                <input 
+                  type="text" 
+                  value="${escapeHtml(item.title)}" 
+                  placeholder="${isProc ? 'Gemini 3 Flash sedang menyusun judul komersial 60-90 karakter...' : 'Contoh: Isometric Cloud Datacenter Server 3D Render for Network Infrastructure Banner'}" 
+                  oninput="updateAssetTitle('${item.id}', this.value)"
+                  class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 font-medium"
+                />
+              </div>
+
+              <!-- Description Field -->
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <span>Description (Deskripsi Nilai Komersial)</span>
+                    <button onclick="copyField('${item.id}', 'desc')" class="text-slate-400 hover:text-indigo-400 transition" title="Salin Description">
+                      <i class="fa-regular fa-copy text-[11px]"></i>
+                    </button>
+                  </label>
+                  <span class="text-[11px] font-mono text-slate-400">${item.description.length} Karakter</span>
+                </div>
+                <textarea 
+                  rows="2" 
+                  placeholder="${isProc ? 'Meringkas fungsi visual aset untuk desainer & advertiser...' : 'Deskripsi komersial otomatis...'}"
+                  oninput="updateAssetDesc('${item.id}', this.value)"
+                  class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 resize-none"
+                >${escapeHtml(item.description)}</textarea>
+              </div>
+
+              <!-- Keywords Section -->
+              <div>
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-300">Keywords (${item.keywords.length})</span>
+                    <button onclick="copyKeywords('${item.id}')" class="text-xs px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-1" title="Salin semua tags format CSV">
+                      <i class="fa-regular fa-copy text-[10px]"></i> Salin Semua
+                    </button>
+                  </div>
+                  <div class="text-[11px] font-mono">
+                    <span class="${item.keywords.length < state.minKeywords ? 'text-amber-400' : 'text-emerald-400'} font-semibold">
+                      ${item.keywords.length} tags
+                    </span> 
+                    <span class="text-slate-400"> (rekomendasi: ${state.minKeywords}-${state.maxKeywords})</span>
+                  </div>
+                </div>
+
+                <!-- Chips Container -->
+                <div class="min-h-[64px] max-h-[140px] overflow-y-auto bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5 flex flex-wrap gap-1.5 items-start">
+                  ${item.keywords.length === 0 ? `
+                    <span class="text-xs text-slate-600 italic py-1 px-1">
+                      ${isProc ? 'Mengekstraksi kata kunci spesifik dan relevan tanpa trademark spam...' : 'Belum ada keywords.'}
+                    </span>
+                  ` : ''}
+
+                  ${item.keywords.map((kw, kwIdx) => `
+                    <span class="badge-chip inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 px-2.5 py-1 rounded-lg text-xs transition">
+                      <span class="text-[10px] text-slate-500 font-mono">#${kwIdx + 1}</span>
+                      <span>${escapeHtml(kw)}</span>
+                      <button onclick="removeKeyword('${item.id}', ${kwIdx})" class="badge-delete text-slate-400 hover:text-rose-400 transition ml-0.5" title="Hapus keyword">
+                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                      </button>
+                    </span>
+                  `).join('')}
+                </div>
+
+                <!-- Quick Keyword Adder -->
+                <div class="mt-2 flex gap-2">
+                  <div class="relative flex-1">
+                    <input 
+                      type="text" 
+                      id="kwInput_${item.id}"
+                      placeholder="Tambah keyword (1 kata tanpa spasi, pisahkan spasi/koma)..."
+                      onkeydown="handleKeywordKeydown(event, '${item.id}')"
+                      class="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <button onclick="addManualKeyword('${item.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition">
+                    <i class="fa-solid fa-plus mr-1"></i> Tambah
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function updateAssetTitle(id, val) {
+            const asset = state.assets.find(a => a.id === id);
+            if (asset) {
+                asset.title = val;
+                const counter = document.getElementById(`titleCount_${id}`);
+                if (counter) {
+                    const isOptimal = val.length >= 60 && val.length <= 90;
+                    counter.textContent = `${val.length}/60-90 Karakter`;
+                    counter.className = `text-[11px] font-mono ${isOptimal ? 'text-emerald-400 font-semibold' : val.length > 90 ? 'text-amber-400 font-bold' : 'text-slate-400'}`;
+                }
+            }
+        }
+
+        function updateAssetDesc(id, val) {
+            const asset = state.assets.find(a => a.id === id);
+            if (asset) asset.description = val;
+        }
+
+        function removeKeyword(assetId, kwIndex) {
+            const asset = state.assets.find(a => a.id === assetId);
+            if (asset && asset.keywords) {
+                asset.keywords.splice(kwIndex, 1);
+                renderAssets();
+            }
+        }
+
+        function sanitizeWord(str) {
+            // Hapus semua simbol, angka, spasi, dan tanda baca, hanya sisakan huruf a-z
+            return (str || '').toLowerCase().replace(/[^a-z]/g, '').trim();
+        }
+
+        const STOPWORDS = new Set(['the', 'and', 'in', 'on', 'with', 'for', 'of', 'at', 'to', 'from', 'by', 'an', 'a']);
+
+        function addManualKeyword(assetId) {
+            const input = document.getElementById(`kwInput_${assetId}`);
+            if (!input) return;
+            const val = input.value.trim().toLowerCase();
+            if (!val) return;
+
+            const asset = state.assets.find(a => a.id === assetId);
+            if (asset) {
+                // Otomatis pecah spasi/tanda baca menjadi kata tunggal mandiri murni huruf
+                const rawTokens = val.split(/[\s,;.+/_|\\-]+/);
+                for (const raw of rawTokens) {
+                    const cleanWord = sanitizeWord(raw);
+                    if (cleanWord.length > 1 && !STOPWORDS.has(cleanWord) && !asset.keywords.includes(cleanWord)) {
+                        asset.keywords.push(cleanWord);
+                    }
+                }
+                input.value = '';
+                renderAssets();
+            }
+        }
+
+        function handleKeywordKeydown(event, assetId) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addManualKeyword(assetId);
+            }
+        }
+
+        window.processSingleAsset = processSingleAsset;
+        window.removeAsset = removeAsset;
+        window.copyField = copyField;
+        window.copyKeywords = copyKeywords;
+        window.removeKeyword = removeKeyword;
+        window.addManualKeyword = addManualKeyword;
+        window.handleKeywordKeydown = handleKeywordKeydown;
+        window.updateAssetTitle = updateAssetTitle;
+        window.updateAssetDesc = updateAssetDesc;
+
+        function copyField(assetId, field) {
+            const asset = state.assets.find(a => a.id === assetId);
+            if (!asset) return;
+            if (field === 'title') copyToClipboard(asset.title, "Title disalin ke clipboard!");
+            if (field === 'desc') copyToClipboard(asset.description, "Description disalin ke clipboard!");
+        }
+
+        function copyKeywords(assetId) {
+            const asset = state.assets.find(a => a.id === assetId);
+            if (!asset || !asset.keywords.length) return;
+            const csvKeywords = asset.keywords.join(', ');
+            copyToClipboard(csvKeywords, `${asset.keywords.length} keywords disalin (format koma)!`);
+        }
+
+        function removeAsset(id) {
+            const idx = state.assets.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                state.assets.splice(idx, 1);
+                updateStats();
+                renderAssets();
+                showToast('Aset Dihapus', 'Gambar dihapus dari daftar.', 'info');
+            }
+        }
+
+        async function processSingleAsset(assetId) {
+            const asset = state.assets.find(a => a.id === assetId);
+            if (!asset) return;
+
+            asset.status = 'processing';
+            asset.errorMsg = null;
+            renderAssets();
+            updateStats();
+
+            try {
+                let base64Data = '';
+                let mime = 'image/jpeg';
+
+                if (asset.fileObj) {
+                    const res = await fileToBase64(asset.fileObj);
+                    base64Data = res.base64;
+                    mime = res.mimeType;
+                } else if (asset.base64Demo) {
+                    base64Data = asset.base64Demo;
+                    mime = asset.demoMime || 'image/png';
+                }
+
+                const metadata = await callGeminiVision(base64Data, mime);
+
+                asset.title = (metadata.title || '').trim();
+                asset.description = (metadata.description || '').trim();
+                asset.assetType = metadata.assetType || 'Digital Asset';
+
+                // Sanitasi Ketat: single word only, tanpa angka, tanpa simbol, urut 4 hierarki
+                const rawKeywords = metadata.keywords || [];
+                const uniqueSingleWords = [];
+
+                rawKeywords.forEach(kw => {
+                    if (typeof kw === 'string') {
+                        // Pecah jika model masih menghasilkan spasi atau tanda baca
+                        const tokens = kw.split(/[\s,;.+/_|\\-]+/);
+                        tokens.forEach(tok => {
+                            const clean = sanitizeWord(tok);
+                            if (clean.length > 1 && !STOPWORDS.has(clean) && !uniqueSingleWords.includes(clean)) {
+                                uniqueSingleWords.push(clean);
+                            }
+                        });
+                    }
+                });
+
+                // Batasi rentang target 35 - 45 kata kunci
+                asset.keywords = uniqueSingleWords.slice(0, state.maxKeywords);
+                asset.status = 'completed';
+
+                showToast('Analisis Selesai', `"${asset.filename}" berhasil dikurasi: Title (${asset.title.length} karakter), ${asset.keywords.length} kata kunci single-word.`, 'success');
+            } catch (err) {
+                asset.status = 'error';
+                asset.errorMsg = err.message || 'Gagal memproses gambar';
+                showToast('Gagal Proses', `Gagal menganalisis ${asset.filename}: ${asset.errorMsg}`, 'error');
+            } finally {
+                updateStats();
+                renderAssets();
+            }
+        }
+
+        async function processBatchQueue() {
+            if (state.isProcessing) {
+                showToast('Sedang Berjalan', 'Proses batch sedang berlangsung.', 'warning');
+                return;
+            }
+
+            const pendingAssets = state.assets.filter(a => a.status === 'queued' || a.status === 'error');
+            if (pendingAssets.length === 0) {
+                showToast('Semua Selesai', 'Tidak ada aset dalam antrean yang perlu diproses.', 'info');
+                return;
+            }
+
+            state.isProcessing = true;
+            const progressWrapper = document.getElementById('batchProgressWrapper');
+            const progressBar = document.getElementById('batchProgressBar');
+            const progressPercent = document.getElementById('batchProgressPercent');
+            const progressStatus = document.getElementById('batchProgressStatus');
+            const processBtn = document.getElementById('btnProcessQueue');
+
+            progressWrapper.classList.remove('hidden');
+            processBtn.disabled = true;
+
+            const totalItems = pendingAssets.length;
+            let completedCount = 0;
+
+            // Concurrency Pool Runner
+            const queue = [...pendingAssets];
+            const activeWorkers = [];
+
+            const updateProgressUI = () => {
+                const pct = Math.round((completedCount / totalItems) * 100);
+                progressBar.style.width = `${pct}%`;
+                progressPercent.textContent = `${pct}%`;
+                progressStatus.textContent = `Memproses (${completedCount}/${totalItems}) aset dengan ${state.concurrencyLimit} threads paralel...`;
+            };
+
+            updateProgressUI();
+
+            const worker = async () => {
+                while (queue.length > 0) {
+                    const item = queue.shift();
+                    if (!item) break;
+                    await processSingleAsset(item.id);
+                    completedCount++;
+                    updateProgressUI();
+                }
+            };
+
+            const workerCount = Math.min(state.concurrencyLimit, queue.length);
+            for (let i = 0; i < workerCount; i++) {
+                activeWorkers.push(worker());
+            }
+
+            await Promise.all(activeWorkers);
+
+            state.isProcessing = false;
+            processBtn.disabled = false;
+            progressStatus.textContent = 'Semua antrean berhasil diproses!';
+            setTimeout(() => {
+                progressWrapper.classList.add('hidden');
+            }, 2500);
+
+            showToast('Batch Selesai', `Berhasil memproses seluruh antrean (${totalItems} aset)!`, 'success');
+        }
+
+        function exportToCSV() {
+            const completed = state.assets.filter(a => a.status === 'completed');
+            if (completed.length === 0) {
+                showToast('Belum Ada Data', 'Selesaikan proses metadata minimal 1 aset sebelum ekspor CSV.', 'warning');
+                return;
+            }
+
+            // Microstock Universal CSV Header
+            // Compatible with Adobe Stock CSV, Shutterstock CSV, and Freepik batch uploaders
+            const headers = ["Filename", "Title", "Description", "Keywords", "Category"];
+
+            const rows = completed.map(item => {
+                const cleanFilename = item.filename.replace(/"/g, '""');
+                const cleanTitle = (item.title || '').replace(/"/g, '""');
+                const cleanDesc = (item.description || '').replace(/"/g, '""');
+                const cleanKeywords = (item.keywords || []).join(', ').replace(/"/g, '""');
+                const cleanCategory = (item.assetType || 'Graphic Resources').replace(/"/g, '""');
+
+                return `"${cleanFilename}","${cleanTitle}","${cleanDesc}","${cleanKeywords}","${cleanCategory}"`;
+            });
+
+            const csvContent = "\uFEFF" + [headers.join(','), ...rows].join("\r\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `microstock_metadata_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('Ekspor CSV Berhasil', `${completed.length} baris metadata telah diekspor.`, 'success');
+        }
+
+        function exportToJSON() {
+            const data = state.assets.map(a => ({
+                filename: a.filename,
+                title: a.title,
+                description: a.description,
+                assetType: a.assetType,
+                keywords: a.keywords,
+                status: a.status
+            }));
+
+            const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const link = document.createElement('a');
+            link.setAttribute('href', jsonStr);
+            link.setAttribute('download', `microstock_metadata_${Date.now()}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('Ekspor JSON', 'Data metadata berhasil diekspor ke JSON.', 'success');
+        }
+
+        function updateStats() {
+            const total = state.assets.length;
+            const completed = state.assets.filter(a => a.status === 'completed').length;
+            const processing = state.assets.filter(a => a.status === 'processing').length;
+            const queued = state.assets.filter(a => a.status === 'queued' || a.status === 'error').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statProcessing').textContent = processing;
+            document.getElementById('statConcurrency').textContent = `${state.concurrencyLimit} Threads`;
+
+            document.getElementById('countAll').textContent = total;
+            document.getElementById('countQueued').textContent = queued + processing;
+            document.getElementById('countDone').textContent = completed;
+        }
+
+        function loadDemoSamples() {
+            // 3 High-contrast creative sample digital assets rendered to Base64
+            const samples = [
+                {
+                    name: "isometric_cloud_hosting_server_3d.png",
+                    type: "3D Render",
+                    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+            <defs>
+              <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0f172a"/>
+                <stop offset="100%" stop-color="#1e1b4b"/>
+              </linearGradient>
+              <linearGradient id="serverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#a855f7"/>
+              </linearGradient>
+            </defs>
+            <rect width="600" height="400" fill="url(#bg)"/>
+            <polygon points="300,120 440,200 300,280 160,200" fill="#312e81" opacity="0.8"/>
+            <rect x="230" y="160" width="140" height="120" rx="16" fill="url(#serverGrad)"/>
+            <circle cx="260" cy="190" r="6" fill="#4ade80"/>
+            <circle cx="280" cy="190" r="6" fill="#38bdf8"/>
+            <circle cx="300" cy="190" r="6" fill="#fbbf24"/>
+            <rect x="250" y="220" width="100" height="6" rx="3" fill="#ffffff" opacity="0.6"/>
+            <rect x="250" y="235" width="70" height="6" rx="3" fill="#ffffff" opacity="0.4"/>
+            <path d="M300,90 Q340,70 370,100 T420,110 T390,140 H210 Q190,120 220,95 T270,95 Z" fill="#ffffff" opacity="0.9"/>
+            <text x="300" y="340" fill="#cbd5e1" font-family="Inter, sans-serif" font-size="14" font-weight="bold" text-anchor="middle">ISOMETRIC CLOUD DATACENTER SERVER 3D</text>
+          </svg>`
+                },
+                {
+                    name: "ramadan_kareem_arabic_lantern_banner.jpg",
+                    type: "Vector Illustration",
+                    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+            <defs>
+              <linearGradient id="islamicBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#064e3b"/>
+                <stop offset="100%" stop-color="#022c22"/>
+              </linearGradient>
+              <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fde047"/>
+                <stop offset="100%" stop-color="#ca8a04"/>
+              </linearGradient>
+            </defs>
+            <rect width="600" height="400" fill="url(#islamicBg)"/>
+            <path d="M480,180 A90,90 0 1,0 390,270 A70,70 0 1,1 480,180 Z" fill="url(#gold)"/>
+            <!-- Lantern -->
+            <rect x="180" y="80" width="4" height="60" fill="url(#gold)"/>
+            <polygon points="182,140 210,170 154,170" fill="url(#gold)"/>
+            <rect x="160" y="170" width="44" height="60" fill="#fef08a" opacity="0.8"/>
+            <polygon points="182,250 210,230 154,230" fill="url(#gold)"/>
+            <text x="300" y="350" fill="#fef08a" font-family="Inter, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">RAMADAN KAREEM GOLDEN LANTERN</text>
+          </svg>`
+                },
+                {
+                    name: "organic_fresh_green_avocado_isolated.png",
+                    type: "Isolated Food Photo",
+                    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+            <rect width="600" height="400" fill="#f8fafc"/>
+            <ellipse cx="300" cy="330" rx="140" ry="25" fill="#cbd5e1" opacity="0.6"/>
+            <path d="M300,100 C360,100 410,180 410,260 C410,330 360,360 300,360 C240,360 190,330 190,260 C190,180 240,100 300,100 Z" fill="#4d7c0f"/>
+            <path d="M300,120 C345,120 385,185 385,255 C385,315 345,340 300,340 C255,340 215,315 215,255 C215,185 255,120 300,120 Z" fill="#bef264"/>
+            <circle cx="300" cy="255" r="55" fill="#78350f"/>
+            <text x="300" y="385" fill="#64748b" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">FRESH RIPE AVOCADO ISOLATED ON WHITE</text>
+          </svg>`
+                }
+            ];
+
+            samples.forEach(s => {
+                const base64 = btoa(unescape(encodeURIComponent(s.svg)));
+                const previewUrl = `data:image/svg+xml;base64,${base64}`;
+                const assetId = 'asset_demo_' + Math.random().toString(36).substr(2, 7);
+
+                state.assets.push({
+                    id: assetId,
+                    filename: s.name,
+                    fileSize: "45.2 KB",
+                    previewUrl: previewUrl,
+                    base64Demo: base64,
+                    demoMime: "image/svg+xml",
+                    status: 'queued',
+                    title: '',
+                    description: '',
+                    assetType: s.type,
+                    keywords: []
+                });
+            });
+
+            updateStats();
+            renderAssets();
+            showToast('Sample Dimuat', '3 aset contoh (3D, Vector, Photo) siap untuk dianalisis.', 'success');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // File input & Drag drop
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+                fileInput.value = '';
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('border-indigo-500', 'bg-slate-900/90');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-indigo-500', 'bg-slate-900/90');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files) {
+                    handleFiles(dt.files);
+                }
+            });
+
+            // Controls
+            document.getElementById('btnLoadDemo').addEventListener('click', loadDemoSamples);
+            document.getElementById('btnProcessQueue').addEventListener('click', processBatchQueue);
+            document.getElementById('btnExportCSV').addEventListener('click', exportToCSV);
+            document.getElementById('btnExportJSON').addEventListener('click', exportToJSON);
+
+            document.getElementById('btnClearAll').addEventListener('click', () => {
+                if (state.assets.length === 0) return;
+                state.assets = [];
+                updateStats();
+                renderAssets();
+                showToast('Dibersihkan', 'Semua aset telah dihapus dari ruang kerja.', 'info');
+            });
+
+            // Filter tabs
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => {
+                        b.classList.remove('bg-indigo-600', 'text-white', 'active');
+                        b.classList.add('text-slate-400');
+                    });
+                    btn.classList.add('bg-indigo-600', 'text-white', 'active');
+                    btn.classList.remove('text-slate-400');
+
+                    if (btn.id === 'filterAll') state.filter = 'all';
+                    if (btn.id === 'filterQueued') state.filter = 'queued';
+                    if (btn.id === 'filterCompleted') state.filter = 'completed';
+
+                    renderAssets();
+                });
+            });
+
+            // Platform Preset
+            const platformSelect = document.getElementById('platformPreset');
+            platformSelect.addEventListener('change', (e) => {
+                state.preset = e.target.value;
+                const config = PRESETS[state.preset] || PRESETS.universal;
+                state.minKeywords = config.minKeywords;
+                state.maxKeywords = config.maxKeywords;
+                document.getElementById('minKeywordsInput').value = config.minKeywords;
+                document.getElementById('maxKeywordsInput').value = config.maxKeywords;
+                showToast('Preset Berubah', `Menggunakan konfigurasi optimal untuk ${config.name}`, 'info');
+                renderAssets();
+            });
+
+            // Settings Modal
+            const settingsModal = document.getElementById('settingsModal');
+            const btnSettings = document.getElementById('btnSettings');
+            const btnCloseSettings = document.getElementById('btnCloseSettings');
+            const btnSaveSettings = document.getElementById('btnSaveSettings');
+            const concurrencyRange = document.getElementById('concurrencyRange');
+            const concurrencyVal = document.getElementById('concurrencyVal');
+
+            btnSettings.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+            });
+
+            btnCloseSettings.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            concurrencyRange.addEventListener('input', (e) => {
+                concurrencyVal.textContent = e.target.value;
+            });
+
+            btnSaveSettings.addEventListener('click', () => {
+                state.concurrencyLimit = parseInt(concurrencyRange.value, 10);
+                state.minKeywords = parseInt(document.getElementById('minKeywordsInput').value, 10) || 30;
+                state.maxKeywords = parseInt(document.getElementById('maxKeywordsInput').value, 10) || 45;
+                state.customNotes = document.getElementById('customPromptNotes').value.trim();
+                updateStats();
+                settingsModal.classList.add('hidden');
+                showToast('Pengaturan Disimpan', `Concurrency: ${state.concurrencyLimit} workers | Keywords: ${state.minKeywords}-${state.maxKeywords}`, 'success');
+            });
+
+            // Initial stats
+            updateStats();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.badge-chip:hover .badge-delete {
+    opacity: 1;
+}
+
+@keyframes pulse-border {
+
+    0%,
+    100% {
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    50% {
+        border-color: rgba(99, 102, 241, 0.9);
+    }
+}
+
+.processing-pulse {
+    animation: pulse-border 2s infinite ease-in-out;
+}

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StockMeta Studio by BRKH STUDIO - Microstock Batch Metadata AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="public/icon.ico" />
+    <link rel="shortcut icon" href="public/icon.jpg" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Pure Low-RAM Vanilla JS Logic -->
+    <script src="script.js" defer></script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img src="public/icon.jpg" alt="StockMeta Logo" class="w-10 h-10 rounded-xl object-cover border border-slate-700/60 shadow-lg shadow-indigo-500/25" />
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold tracking-tight text-white text-base sm:text-lg">StockMeta<span class="text-indigo-400">.AI</span></span>
+                        <span class="text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm flex items-center gap-1">
+                            <i class="fa-solid fa-code text-indigo-400"></i> BY BRKH STUDIO
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Microstock Metadata Studio by BRKH STUDIO & Direct IPTC Injector</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Niche Category Theme Selector -->
+                <div class="flex items-center px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700/80 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 shadow-sm gap-1.5">
+                    <label for="nicheThemeSelect" class="text-xs text-slate-400 font-semibold shrink-0 cursor-pointer hidden md:flex items-center gap-1">
+                        <i class="fa-solid fa-layer-group text-amber-400"></i>Kategori
+                    </label>
+                    <select id="nicheThemeSelect" class="bg-transparent text-xs text-amber-300 font-semibold focus:outline-none cursor-pointer">
+                        <option value="auto" class="bg-slate-900 text-slate-200">✨ Auto-Detect (Semua Tema)</option>
+                        <option value="text_effect" class="bg-slate-900 text-amber-300">🔤 Text Effect & Typography (PSD/EPS)</option>
+                        <option value="vector_illustration" class="bg-slate-900 text-amber-300">🎨 Vector & Ilustrasi Digital</option>
+                        <option value="ui_ux" class="bg-slate-900 text-amber-300">💻 UI/UX Component & Web Template</option>
+                        <option value="icon_set" class="bg-slate-900 text-amber-300">⭐ Set Ikon & Simbol (Icon Pack)</option>
+                        <option value="isometric" class="bg-slate-900 text-amber-300">🧊 Desain Isometrik 3D</option>
+                        <option value="social_media" class="bg-slate-900 text-amber-300">📢 Social Media Poster & Flyer</option>
+                        <option value="render_3d" class="bg-slate-900 text-amber-300">🎬 3D Render & Object Modeling</option>
+                        <option value="pattern" class="bg-slate-900 text-amber-300">🏁 Seamless Pattern & Texture</option>
+                        <option value="character" class="bg-slate-900 text-amber-300">👤 Karakter & Maskot Digital</option>
+                        <option value="logo_emblem" class="bg-slate-900 text-amber-300">🛡️ Logo, Badge & Emblem</option>
+                        <option value="background" class="bg-slate-900 text-amber-300">🖼️ Latar Belakang & Abstract Texture</option>
+                    </select>
+                </div>
+
+                <!-- Preset Selector -->
+                <div class="flex items-center px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700/80 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 shadow-sm gap-1.5">
+                    <label for="platformPreset" class="text-xs text-slate-400 font-semibold shrink-0 cursor-pointer hidden xl:flex items-center gap-1">
+                        <i class="fa-solid fa-store text-indigo-400"></i>Preset
+                    </label>
+                    <select id="platformPreset" class="bg-transparent text-xs text-slate-200 font-semibold focus:outline-none cursor-pointer">
+                        <option value="universal" class="bg-slate-900">Universal (Adobe & Shutter)</option>
+                        <option value="adobestock" class="bg-slate-900">Adobe Stock (Max 49 tags)</option>
+                        <option value="shutterstock" class="bg-slate-900">Shutterstock (Max 50 tags)</option>
+                        <option value="freepik" class="bg-slate-900">Freepik (Strict Style Tags)</option>
+                        <option value="getty" class="bg-slate-900">iStock / Getty (Concise)</option>
+                    </select>
+                </div>
+
+                <button id="btnSettings" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Pengaturan Konkurensi & API Key">
+                    <i class="fa-solid fa-sliders text-sm"></i>
+                </button>
+
+                <button id="btnLicense" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5 shadow-sm" title="Lihat Lisensi Aplikasi">
+                    <i class="fa-solid fa-file-contract text-emerald-400"></i>
+                    <span class="hidden md:inline">Lisensi</span>
+                </button>
+
+                <button id="btnFAQ" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5 shadow-sm" title="Panduan & FAQ">
+                    <i class="fa-solid fa-circle-question text-sky-400"></i>
+                    <span class="hidden sm:inline">FAQ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+        <!-- Stats Dashboard -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-images"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Total Aset</div>
+                    <div id="statTotal" class="text-lg font-bold text-white">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Selesai & IPTC Embedded</div>
+                    <div id="statCompleted" class="text-lg font-bold text-emerald-400">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-spinner animate-spin"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Sedang Diproses</div>
+                    <div id="statProcessing" class="text-lg font-bold text-amber-400">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-base">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium">Worker Paralel</div>
+                    <div id="statConcurrency" class="text-lg font-bold text-blue-400">2 Threads (Pacing 2.5s)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Pick / Drag Drop Zone -->
+        <div id="dropZone" class="relative group border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-900/40 hover:bg-slate-900/80 transition duration-200 rounded-2xl p-6 sm:p-8 text-center cursor-pointer">
+            <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,image/jpg" class="hidden" />
+            <div class="flex flex-col items-center justify-center gap-3 pointer-events-none">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition scale-100 group-hover:scale-110">
+                    <i class="fa-solid fa-folder-open text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-200 text-sm sm:text-base">Klik atau Tarik File Gambar JPG di Sini</h3>
+                    <p class="text-xs text-slate-400 mt-1">Menggunakan Windows Native File Picker. Metadata IPTC akan otomatis tertulis ke header biner file.</p>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
+                        <i class="fa-solid fa-file-contract text-emerald-400"></i> Direct Binary IPTC
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
+                        <i class="fa-solid fa-microchip text-indigo-400"></i> Ephemeral 1024px RAM Buffer
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Control Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 sm:p-4 rounded-xl">
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button id="filterAll" class="filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white">
+                    Semua (<span id="countAll">0</span>)
+                </button>
+                <button id="filterQueued" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    Antrean (<span id="countQueued">0</span>)
+                </button>
+                <button id="filterCompleted" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    Selesai (<span id="countDone">0</span>)
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="btnProcessQueue" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-lg shadow-md shadow-indigo-600/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Mulai Batch Processing</span>
+                </button>
+                <button id="btnOpenConsoleLog" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 relative">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i>
+                    <span>Console Log</span>
+                    <span id="logErrorBadge" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                        <i class="fa-solid fa-circle-exclamation text-rose-400"></i> Error
+                    </span>
+                </button>
+                <button id="btnExportCSV" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-csv text-emerald-400"></i>
+                    <span>Ekspor CSV</span>
+                </button>
+                <button id="btnExportJSON" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-code text-amber-400"></i>
+                    <span>JSON</span>
+                </button>
+                <button id="btnClearAll" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Bersihkan Semua">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Overall Batch Progress Bar -->
+        <div id="batchProgressWrapper" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+            <div class="flex justify-between text-xs">
+                <span class="text-slate-300 font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-gear fa-spin text-indigo-400"></i>
+                    <span id="batchProgressStatus">Memproses antrean paralel...</span>
+                </span>
+                <span id="batchProgressPercent" class="font-mono text-indigo-400 font-bold">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="batchProgressBar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all duration-300 w-0"></div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="py-16 text-center border border-slate-800/80 bg-slate-900/30 rounded-2xl flex flex-col items-center justify-center">
+            <div class="w-16 h-16 rounded-full bg-slate-800/60 flex items-center justify-center text-slate-500 mb-3">
+                <i class="fa-regular fa-folder-open text-2xl"></i>
+            </div>
+            <h4 class="text-sm font-semibold text-slate-300">Belum Ada Gambar yang Dimuat</h4>
+            <p class="text-xs text-slate-500 mt-1 max-w-sm">Pilih file gambar JPG lokal Anda untuk memproses dan menginjeksi metadata biner IPTC secara otomatis.</p>
+        </div>
+
+        <!-- Asset Items Grid -->
+        <div id="assetsGrid" class="space-y-4"></div>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i> Pengaturan Aplikasi Desktop
+                </h3>
+                <button id="btnCloseSettings" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <!-- API Key Rotation Section -->
+                <div class="bg-slate-950/60 p-3.5 border border-slate-800 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="font-semibold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-key text-amber-400"></i> Gemini API Keys (Auto-Rolling)
+                        </label>
+                        <span id="keyCountBadge" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                            0 / 30 API Keys
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1">
+                        <button id="btnUploadKeysTxt" type="button" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                            <i class="fa-solid fa-file-arrow-up"></i> Upload File TXT
+                        </button>
+                        <input type="file" id="keysFileInput" accept=".txt" class="hidden" />
+                        <span class="text-[11px] text-slate-400">atau paste di bawah (1 key per baris):</span>
+                    </div>
+
+                    <textarea id="apiKeyInput" rows="3" placeholder="Masukkan 1 atau banyak Gemini API Key (maksimal 30 key)...&#10;AIzaSyA...&#10;AIzaSyB..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"></textarea>
+
+                    <div id="apiKeysList" class="flex flex-wrap gap-1.5 pt-1 max-h-24 overflow-y-auto custom-scrollbar"></div>
+
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        <i class="fa-solid fa-rotate text-indigo-400 mr-1"></i> API Key akan di-rolling otomatis per request & langsung beralih ke key berikutnya jika terkena limit quota 429.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Batas Concurrency (Paralel Worker)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="concurrencyRange" min="1" max="3" value="2" class="w-full accent-indigo-500 bg-slate-800" />
+                        <span id="concurrencyVal" class="font-mono font-bold text-indigo-400 text-sm w-8">2</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Dibatasi 2-3 worker dengan jeda wajib 2.500 ms per siklus agar selalu di bawah 15 RPM.</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Target Jumlah Keywords</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[11px] text-slate-400">Min:</span>
+                            <input type="number" id="minKeywordsInput" value="35" min="30" max="40" class="w-full mt-0.5 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono" />
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-400">Maks:</span>
+                            <input type="number" id="maxKeywordsInput" value="45" min="40" max="50" class="w-full mt-0.5 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono" />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Instruksi Tambahan / Gaya Khusus</label>
+                    <textarea id="customPromptNotes" rows="2" placeholder="Contoh: Tekankan jika ini gaya 3D Clay, isometric, atau banner e-commerce Ramadan..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button id="btnSaveSettings" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition">Simpan Pengaturan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Console Log Realtime Modal -->
+    <div id="consoleLogModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-indigo-400 flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-white text-base">Realtime System Log Console</h3>
+                            <span id="logStatusTag" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                NORMAL
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400">Pemantauan aktivitas AI Vision, Buyer Demand, dan IPTC Injection secara live.</p>
+                    </div>
+                </div>
+                <button id="btnCloseConsoleLog" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Toolbar / Filters -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3 text-xs">
+                <div class="flex items-center gap-1.5">
+                    <button id="logFilterAll" class="log-filter-btn active px-3 py-1 rounded-lg bg-indigo-600 text-white font-semibold shadow-sm">
+                        Semua (<span id="logCountAll">0</span>)
+                    </button>
+                    <button id="logFilterError" class="log-filter-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-300 font-semibold border border-slate-700 transition">
+                        Error (<span id="logCountError">0</span>)
+                    </button>
+                    <button id="logFilterSuccess" class="log-filter-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-emerald-300 font-semibold border border-slate-700 transition">
+                        Sukses (<span id="logCountSuccess">0</span>)
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="btnClearLog" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can text-slate-400"></i>
+                        <span>Clear Log</span>
+                    </button>
+                    <button id="btnCopyLog" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-copy text-indigo-400"></i>
+                        <span>Salin Log</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terminal Output Box -->
+            <div id="consoleLogContainer" class="bg-slate-950 font-mono text-xs overflow-y-auto flex-1 min-h-[320px] max-h-[480px] p-4 border border-slate-800/90 rounded-xl space-y-2 select-text shadow-inner">
+                <div class="text-slate-500 italic">[SYSTEM 13:12:00] Terminal log siap. Memantai aktivitas sistem...</div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between border-t border-slate-800 pt-3 mt-4 text-xs text-slate-400">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-medium">Realtime Engine Connected</span>
+                </div>
+                <button id="btnCloseConsoleLogBottom" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg border border-slate-700 transition">
+                    Tutup Console
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Modal -->
+    <div id="licenseModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-file-contract text-emerald-400"></i> Lisensi Perangkat Lunak
+                </h3>
+                <button id="btnCloseLicense" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 space-y-3 max-h-[380px] overflow-y-auto leading-relaxed">
+                <div class="font-bold text-indigo-400 text-sm">MIT License - StockMeta Studio by BRKH STUDIO</div>
+                <p>Copyright (c) 2026 BRKH STUDIO. All rights reserved.</p>
+                <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:</p>
+                <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+                <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+                <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+                    <span class="font-bold text-slate-200">Pengembang & Pemilik Hak Cipta:</span> BRKH STUDIO<br>
+                    <span class="font-bold text-slate-200">Teknologi Inti:</span> Python 3, PyWebView, Gemini Vision AI, Binary IPTC/EXIF/XMP Injector, Buyer Demand Engine.
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-1">
+                <button id="btnCloseLicenseBottom" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ & User Guide Modal -->
+    <div id="faqModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-sky-400 flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">Panduan Penggunaan & FAQ Proyek</h3>
+                        <p class="text-xs text-slate-400">StockMeta Studio by BRKH STUDIO - Microstock Batch Metadata AI</p>
+                    </div>
+                </div>
+                <button id="btnCloseFAQ" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
+                <!-- Section 1: Cara Penggunaan -->
+                <div class="bg-slate-950 p-4 border border-slate-800 rounded-xl space-y-2">
+                    <h4 class="font-bold text-indigo-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check"></i> Langkah Mudah Penggunaan
+                    </h4>
+                    <ol class="list-decimal list-inside space-y-1.5 text-slate-300 text-xs">
+                        <li><span class="font-semibold text-white">Konfigurasi API Key:</span> Klik tombol Pengaturan (<i class="fa-solid fa-sliders text-indigo-400"></i>), masukkan 1 hingga 30 API Key Gemini (dukungan impor TXT auto-rolling).</li>
+                        <li><span class="font-semibold text-white">Unggah File:</span> Klik area upload atau tarik file JPG lokal Anda ke area workspace.</li>
+                        <li><span class="font-semibold text-white">Pilih Preset Platform:</span> Pilih target platform (Universal, Adobe Stock, Shutterstock, Freepik, Getty).</li>
+                        <li><span class="font-semibold text-white">Eksekusi Batch:</span> Klik tombol <span class="text-indigo-400 font-bold">Mulai Batch Processing</span>. Sistem AI Vision & Buyer Demand akan bekerja secara paralel.</li>
+                        <li><span class="font-semibold text-white">Injeksi & Ekspor:</span> Metadata Title, Description, dan Keywords disuntikkan secara biner ke header file JPG & file vektor EPS (jika ada). CSV/JSON dapat diekspor kapan saja.</li>
+                    </ol>
+                </div>
+
+                <!-- Section 2: FAQ Accordions -->
+                <div class="space-y-2.5">
+                    <h4 class="font-bold text-sky-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-comments"></i> Pertanyaan Sering Diajukan (FAQ)
+                    </h4>
+
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1">
+                        <div class="font-semibold text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-sliders text-amber-400"></i>
+                            <span>Q: Apa fungsi dari menu "Kategori" dan "Preset" di toolbar atas?</span>
+                        </div>
+                        <div class="text-slate-400 leading-relaxed space-y-1 mt-1">
+                            <p><strong class="text-amber-300">1. Kategori Tema (Niche Selector):</strong> Pilihan tema khusus (misal: <em>Text Effect</em>, <em>Vector Illustration</em>, <em>UI/UX Component</em>, <em>Icon Set</em>, <em>Isometric 3D</em>, <em>Social Media Poster</em>, <em>3D Render</em>, <em>Seamless Pattern</em>, <em>Mascot</em>, <em>Logo Badge</em>, <em>Background Texture</em>). Fitur ini secara cerdas mengarahkan Vision AI agar mengenali karakteristik khas visual dan menghasilkan kata kunci komersial yang tepat untuk niche tersebut.</p>
+                            <p><strong class="text-indigo-300">2. Preset Platform:</strong> Menyesuaikan batas panjang Judul (60-90 karakter) serta batas kuota kata kunci otomatis sesuai aturan agensi (Universal, Adobe Stock, Shutterstock, Freepik, iStock/Getty).</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1">
+                        <div class="font-semibold text-white">Q: Apakah metadata tertulis langsung ke file fisik gambar/vektor saya?</div>
+                        <div class="text-slate-400 leading-relaxed">Ya! Metadata Title, Description, dan Keywords disuntikkan secara biner langsung ke header IPTC/EXIF file JPG serta header XMP file EPS pasangan tanpa merusak kualitas piksel gambar.</div>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1">
+                        <div class="font-semibold text-white">Q: Bagaimana jika server Google sibuk (Error 503 High Demand)?</div>
+                        <div class="text-slate-400 leading-relaxed">Sistem dilengkapi fitur Auto-Fallback cerdas. Jika server Google sibuk pada satu model, sistem otomatis beralih seketika ke model kandidat berikutnya (Gemini 2.5/1.5/2.0 Flash) tanpa menghentikan pemrosesan.</div>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1">
+                        <div class="font-semibold text-white">Q: Apa fungsi modul Buyer Demand & Commercial Scoring?</div>
+                        <div class="text-slate-400 leading-relaxed">Sistem meriset kueri pencarian pembeli real-time dari Google & Bing, menyaring kata-kata tunggal (*single word High-CTR*), serta menempatkan 10 tag bernilai komersial tertinggi di urutan awal (aturan Adobe Stock 10-first).</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800 mt-3">
+                <button id="btnCloseFAQBottom" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition">
+                    Tutup Panduan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+</body>
+
+</html>

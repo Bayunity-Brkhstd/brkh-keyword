@@ -1,0 +1,31 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# PyInstaller Build & Executable Outputs
+build/
+dist/
+*.spec
+
+# Local API Keys & Secret Configuration Files
+.stockmeta_config.json
+stockmeta_config.json
+keys.txt
+api_keys.txt
+*.key
+*.env
+.env
+
+# Environment & Virtualenvs
+.venv/
+venv/
+ENV/
+
+# IDE & OS Metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
