@@ -3,8 +3,13 @@ import io
 import gc
 import re
 import xml.sax.saxutils
+import logging
 from PIL import Image
 import iptcinfo3
+
+# Suppress iptcinfo3 verbose log warnings on network shares
+iptcinfo3.logger.setLevel(logging.ERROR)
+
 from core.path_utils import normalize_path
 
 class IPTCInjector:
@@ -67,6 +72,14 @@ class IPTCInjector:
 
         # 2. Binary IPTC Injection (iptcinfo3: ObjectName, Caption/Abstract, Keywords)
         try:
+            # Pre-clean any leftover backup file (~filename.jpg) on NAS/network shares
+            backup_file = file_path + '~'
+            if os.path.exists(backup_file):
+                try:
+                    os.remove(backup_file)
+                except Exception:
+                    pass
+
             info = iptcinfo3.IPTCInfo(file_path, force=True)
 
             if clean_title:
@@ -81,7 +94,6 @@ class IPTCInjector:
             info.save()
 
             # Clean up automatic backup file (~filename.jpg)
-            backup_file = file_path + '~'
             if os.path.exists(backup_file):
                 try:
                     os.remove(backup_file)
@@ -93,6 +105,7 @@ class IPTCInjector:
         except Exception as e:
             print(f"[IPTC ERROR] Penulisan biner IPTC gagal untuk {file_path}: {e}")
             return False
+
 
     @staticmethod
     def embed_to_eps(eps_path: str, title: str, description: str, keywords: list) -> bool:

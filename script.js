@@ -102,9 +102,10 @@ function renderLogs() {
 
     container.innerHTML = filtered.map(log => {
         if (log.type === 'error') {
+            const diag = parseErrorDiagnostic(log.msg);
             return `
-                <div class="bg-rose-950/90 border-l-4 border-rose-600 text-rose-100 p-3 rounded-lg shadow-md shadow-rose-950/60 font-semibold space-y-1 my-1.5">
-                    <div class="flex items-center justify-between gap-2 border-b border-rose-800/60 pb-1">
+                <div class="bg-rose-950/90 border-l-4 border-rose-600 text-rose-100 p-3 rounded-lg shadow-md shadow-rose-950/60 space-y-1.5 my-2">
+                    <div class="flex items-center justify-between gap-2 border-b border-rose-800/60 pb-1.5">
                         <span class="text-rose-300 font-bold flex items-center gap-1.5 text-[11px]">
                             <i class="fa-solid fa-circle-exclamation text-rose-400"></i>
                             <span>[${log.time}] ERROR REPORT</span>
@@ -114,8 +115,19 @@ function renderLogs() {
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i> FAILED
                         </span>
                     </div>
-                    <div class="text-xs text-rose-100 pt-0.5 leading-relaxed">
-                        ${escapeHtml(log.msg)}
+                    <div class="text-xs text-rose-100 font-semibold pt-0.5 leading-snug">
+                        📌 <strong>Penyebab:</strong> ${escapeHtml(diag.cause)}
+                    </div>
+                    <div class="bg-slate-950/70 border border-rose-900/60 rounded-md p-2 space-y-1 text-[11px] text-slate-200">
+                        <div class="font-bold text-amber-300 text-[10.5px] flex items-center gap-1">
+                            <i class="fa-solid fa-wrench text-amber-400"></i> Langkah Perbaikan Mandiri:
+                        </div>
+                        <ul class="list-disc list-inside space-y-0.5 text-slate-300 text-[10.5px] leading-relaxed">
+                            ${diag.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="text-[10px] text-rose-300/60 font-mono pt-0.5 truncate" title="${escapeHtml(log.msg)}">
+                        Detail Pesan Teknis: ${escapeHtml(log.msg)}
                     </div>
                 </div>
             `;
@@ -144,6 +156,117 @@ function renderLogs() {
     }).join('');
 
     container.scrollTop = container.scrollHeight;
+}
+
+// User-Facing Diagnostic & Troubleshooting Parser
+function parseErrorDiagnostic(rawMsg) {
+    const msg = (rawMsg || '').toString().trim();
+    const lower = msg.toLowerCase();
+
+    // 1. API Key Not Configured / Missing
+    if (lower.includes('api key') && (lower.includes('belum dikonfigurasi') || lower.includes('kosong') || lower.includes('belum ada') || lower.includes('tidak ada'))) {
+        return {
+            cause: "Kunci API Gemini belum dimasukkan atau dikonfigurasi di aplikasi.",
+            steps: [
+                "Buka menu Pengaturan (ikon gerigi di sudut kanan atas).",
+                "Unggah file API Key TXT atau tempelkan API Key Gemini Anda (dapatkan gratis di aistudio.google.com).",
+                "Klik tombol 'Simpan API Keys', lalu tekan 'Proses Ulang' pada item ini."
+            ]
+        };
+    }
+
+    // 2. 429 Rate Limit / Quota Exhausted / Resource Exhausted / API Key Invalid
+    if (lower.includes('429') || lower.includes('resource_exhausted') || lower.includes('quota') || lower.includes('rate limit') || lower.includes('api_key_invalid')) {
+        return {
+            cause: "Seluruh API Key Gemini yang terpasang telah mencapai batas kuota penggunaan (RPM/TPM limit).",
+            steps: [
+                "Buka Pengaturan dan tambahkan beberapa API Key Gemini tambahan (aplikasi mendukung hingga 30 API Key untuk auto-rotation).",
+                "Atau tunggu 1 - 2 menit agar batas kuota per menit Gemini diperbarui secara otomatis oleh Google.",
+                "Klik tombol 'Proses Ulang' pada item ini."
+            ]
+        };
+    }
+
+    // 3. 503 Server Overload / High Demand / Unavailable
+    if (lower.includes('503') || lower.includes('unavailable') || lower.includes('high demand') || lower.includes('overloaded') || lower.includes('500')) {
+        return {
+            cause: "Server AI Gemini Google sedang mengalami lonjakan beban tinggi (High Demand / Server Overload).",
+            steps: [
+                "Tunggu 30 - 60 detik agar server Google kembali stabil.",
+                "Pastikan koneksi internet komputer Anda tidak terputus.",
+                "Klik tombol 'Proses Ulang' pada item ini."
+            ]
+        };
+    }
+
+    // 4. File Not Found / NAS Network Server Disconnect / Invalid Path
+    if (lower.includes('tidak ditemukan') || lower.includes('not found') || lower.includes('file_path') || lower.includes('path') || lower.includes('winerror 3')) {
+        return {
+            cause: "File tidak ditemukan pada lokasi path terdaftar (termasuk folder NAS/Network Server yang terputus atau nama folder berubah).",
+            steps: [
+                "Jika file berada di Network Server / NAS, pastikan koneksi jaringan server terhubung di Windows Explorer.",
+                "Pastikan lokasi folder dan nama file tidak diubah atau dihapus saat aplikasi berjalan.",
+                "Jika masalah berlanjut, coba salin file ke Drive lokal (Drive D: atau C:) lalu tambahkan ulang."
+            ]
+        };
+    }
+
+    // 5. Permission Error / Read Only / File Locked
+    if (lower.includes('permission') || lower.includes('access denied') || lower.includes('izin') || lower.includes('winerror 5') || lower.includes('winerror 32')) {
+        return {
+            cause: "Akses file ditolak oleh Windows / Server NAS (File sedang terbuka di software lain atau berstatus Read-Only).",
+            steps: [
+                "Tutup software Adobe Photoshop, Illustrator, Bridge, atau Photo Viewer yang sedang membuka file ini.",
+                "Klik kanan file/folder di Windows Explorer -> Properties -> Hapus centang pada 'Read-Only'.",
+                "Jalankan aplikasi StockMeta Studio ini sebagai Administrator (Right-Click -> Run as Administrator)."
+            ]
+        };
+    }
+
+    // 6. Non-JPG / Format Unsupported
+    if (lower.includes('bukan file jpg') || lower.includes('jpeg') || lower.includes('format')) {
+        return {
+            cause: "File utama bukan berformat JPG/JPEG yang valid untuk analisis Vision AI & penulisan IPTC.",
+            steps: [
+                "Pastikan file yang diproses berformat .jpg atau .jpeg.",
+                "Untuk file vector EPS, pastikan terdapat file gambar pendamping bernama sama (contoh: asset01.jpg dan asset01.eps) di folder yang sama."
+            ]
+        };
+    }
+
+    // 7. IPTC / EXIF Injection Fail
+    if (lower.includes('iptc') || lower.includes('exif')) {
+        return {
+            cause: "Gagal menulis biner EXIF/IPTC langsung ke file gambar.",
+            steps: [
+                "Pastikan file gambar tidak dalam keadaan Read-Only dan tidak sedang dibuka oleh aplikasi lain.",
+                "Hapus file backup sisa yang berakhiran ~ (contoh: gambar.jpg~) di folder asal jika ada.",
+                "Pastikan sisa ruang penyimpanan (disk space) pada Drive / NAS Anda masih mencupi."
+            ]
+        };
+    }
+
+    // 8. Connection / Network Error / Timeout
+    if (lower.includes('connection') || lower.includes('connect') || lower.includes('timeout') || lower.includes('network') || lower.includes('socket')) {
+        return {
+            cause: "Koneksi jaringan internet atau komunikasi bridge terputus.",
+            steps: [
+                "Periksa koneksi internet Wi-Fi / LAN komputer Anda.",
+                "Jika menggunakan VPN atau Proxy, coba nonaktifkan sementara.",
+                "Klik tombol 'Proses Ulang' setelah koneksi terhubung kembali."
+            ]
+        };
+    }
+
+    // 9. Default Generic Fallback
+    return {
+        cause: msg || "Terjadi kesalahan sistem yang tidak terduga.",
+        steps: [
+            "Periksa koneksi internet dan status API Key di menu Pengaturan.",
+            "Pastikan file tidak sedang dibuka oleh aplikasi lain.",
+            "Klik tombol 'Proses Ulang' pada item ini."
+        ]
+    };
 }
 
 // Preset configurations for microstock platforms
@@ -306,14 +429,16 @@ async function processSingleAsset(assetId) {
             } else {
                 asset.status = 'error';
                 asset.errorMsg = res.message || 'Gagal memproses metadata';
-                addLog(`[ERROR ❌] Gagal memproses "${asset.filename}": ${asset.errorMsg}`, 'error', asset.filename);
-                showToast('Gagal Kurasi', `Gagal memproses ${asset.filename}: ${asset.errorMsg}`, 'error');
+                const diag = parseErrorDiagnostic(asset.errorMsg);
+                addLog(`[ERROR ❌] Gagal memproses "${asset.filename}": ${diag.cause}`, 'error', asset.filename);
+                showToast('Gagal Kurasi', `[${asset.filename}]: ${diag.cause}`, 'error');
             }
         } catch (err) {
             asset.status = 'error';
             asset.errorMsg = err.message || 'Koneksi bridge error';
-            addLog(`[ERROR ❌] Kegagalan sistem/bridge pada "${asset.filename}": ${asset.errorMsg}`, 'error', asset.filename);
-            showToast('Error System', `Error ${asset.filename}: ${asset.errorMsg}`, 'error');
+            const diag = parseErrorDiagnostic(asset.errorMsg);
+            addLog(`[ERROR ❌] Kegagalan sistem/bridge pada "${asset.filename}": ${diag.cause}`, 'error', asset.filename);
+            showToast('Error System', `[${asset.filename}]: ${diag.cause}`, 'error');
         }
     } else {
         // Fallback for demo web mode
@@ -522,6 +647,7 @@ function renderAssets() {
 
         const titleLen = (item.title || '').length;
         const isOptimalTitle = titleLen >= 60 && titleLen <= 90;
+        const errDiag = isErr && item.errorMsg ? parseErrorDiagnostic(item.errorMsg) : null;
 
         card.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
@@ -553,6 +679,42 @@ function renderAssets() {
 
                 <!-- Right Metadata Inputs Column -->
                 <div class="md:col-span-9 space-y-3.5">
+                    
+                    ${isErr && errDiag ? `
+                        <div class="bg-rose-950/90 border border-rose-600/80 rounded-xl p-4 space-y-2.5 text-xs text-rose-100 shadow-xl mb-3">
+                            <div class="flex items-center justify-between gap-2 border-b border-rose-800/80 pb-2">
+                                <span class="font-bold text-rose-300 text-xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+                                    <span>LAPORAN DIAGNOSTIK ERROR & SOLUSI</span>
+                                </span>
+                                <span class="text-[10px] bg-rose-600 text-white font-mono font-bold px-2 py-0.5 rounded shadow">Action Required</span>
+                            </div>
+                            
+                            <div class="text-xs font-semibold text-rose-200 leading-relaxed">
+                                📌 <strong class="text-white">Penyebab Error:</strong> ${escapeHtml(errDiag.cause)}
+                            </div>
+
+                            <div class="bg-slate-950/80 border border-rose-900/70 rounded-lg p-3 space-y-1.5 text-[11px]">
+                                <div class="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-screwdriver-wrench text-amber-400"></i>
+                                    <span>Langkah Perbaikan Yang Bisa Anda Lakukan:</span>
+                                </div>
+                                <ul class="list-disc list-inside space-y-1 text-slate-200 pl-1 leading-relaxed">
+                                    ${errDiag.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                                </ul>
+                            </div>
+
+                            <div class="pt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                <span class="font-mono text-[10px] text-rose-300/70 truncate max-w-[320px]" title="${escapeHtml(item.errorMsg)}">
+                                    Detail Pesan Teknis: ${escapeHtml(item.errorMsg)}
+                                </span>
+                                <button onclick="processSingleAsset('${item.id}')" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-rotate-right"></i> Coba Proses Ulang Item Ini
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+
                     
                     <!-- Title Field -->
                     <div>
