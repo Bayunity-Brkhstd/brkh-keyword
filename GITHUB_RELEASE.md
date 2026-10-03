@@ -4,10 +4,10 @@
 
 ---
 
-## 📥 Link Unduhan Resmi (Official Download)
+## 📁 Repository & Unduhan Google Drive Utama
 
-- 🔗 **Direct Download (.exe)**: [Unduh StockMetaStudio.exe via Google Drive](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9)
-- 👁️ **Link Mirror Google Drive**: [Lihat File di Google Drive](https://drive.google.com/file/d/1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9/view?usp=drive_link)
+- 📂 **Folder Utama Rilis Google Drive**: [Buka Folder Master StockMeta Studio](https://drive.google.com/drive/folders/14724m0TmLfqovKGj26beYAigJTfuE6Zo?usp=drive_link)
+- 🚀 **Direct Download File `.exe` (v1.0.0)**: [Unduh StockMetaStudio.exe v1.0.0](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9)
 
 ---
 
@@ -18,39 +18,26 @@
 - 🔒 **API Key Sensor & Masking**: Melindungi kode API Key pengguna dengan fitur sensor bintang (`*`) dan tombol toggle ikon mata (*Lihat/Sembunyikan*).
 - 🚀 **In-App Auto-Update Mandiri**: Fitur pemeriksa & pemasang pembaruan otomatis tanpa backend server kustom (`core/updater.py`).
 - 📸 **Direct IPTC & EPS Vector Injector**: Penulisan biner langsung ke header EXIF/IPTC file gambar dan file vektor EPS tanpa perlu software pihak ketiga.
-- 📊 **Niche Theme Selector & Multi-Platform Presets**: Optimasi gaya untuk Adobe Stock, Shutterstock, Freepik, Getty Images, dan kategori produk spesifik (3D, Text Effect, UI/UX, dsb).
+- 📊 **Niche Theme Selector & Multi-Platform Presets**: Optimasi gaya untuk Adobe Stock, Shutterstock, Freepik, Getty Images, dan kategori produk spesifik.
 
 ---
 
-## 📦 Aset Rilis (Release Assets)
+## 📦 Skema Folder & Pembaruan Versi (v1.0.x)
 
-| File / Aset | Sumber Unduhan | Deskripsi |
+Setiap rilis pembaruan versi (misal `v1.0.0`, `v1.0.1`, `v1.0.2`, dst.) disimpan di folder versi masing-masing di dalam [Google Drive Utama](https://drive.google.com/drive/folders/14724m0TmLfqovKGj26beYAigJTfuE6Zo?usp=drive_link):
+
+| Versi Rilis | Lokasi Folder Google Drive | File Biner Executable |
 | :--- | :--- | :--- |
-| **`StockMetaStudio.exe`** | [Download via Google Drive](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9) | Binary Portabel Windows (Standalone .exe, ~113 MB) |
-| **`version.json`** | [Lihat Manifest `version.json`](./version.json) | File manifest pembaruan versi mandiri v1.0.0 |
-
----
-
-## 📋 Catatan Rilis & Log Perubahan (Changelog v1.0.0)
-
-### Added
-- [NEW] Sistem In-App Auto-Update mandiri (`core/updater.py`) yang terintegrasi dengan PyWebView bridge.
-- [NEW] Fitur sensor teks API Key di Modal Pengaturan beserta tombol toggle ikon mata (`Lihat Key` / `Sembunyikan`).
-- [NEW] Komponen Banner Pembaruan UI modern di Dashboard Utama dengan animasi progress bar.
-
-### Improved
-- [IMP] Penanganan concurrency worker (2-3 worker) untuk mencegah kelebihan batas RPM Gemini API.
-- [IMP] Tampilan preview thumbnail base64 hemat RAM.
+| **v1.0.0** | `stock meta studio/v1.0.0/` | `StockMetaStudio.exe` |
+| **v1.0.1** | `stock meta studio/v1.0.1/` | `StockMetaStudio.exe` |
+| **v1.0.2** | `stock meta studio/v1.0.2/` | `StockMetaStudio.exe` |
+| **v1.0.3** | `stock meta studio/v1.0.3/` | `StockMetaStudio.exe` |
 
 ---
 
 ## 🛠️ Panduan Instalasi & Penggunaan
 
-1. Unduh file **`StockMetaStudio.exe`** melalui link Google Drive di atas.
+1. Unduh file **`StockMetaStudio.exe`** dari folder versi terbaru di Google Drive.
 2. Jalankan `StockMetaStudio.exe` di OS Windows (Windows 10/11 64-bit).
-3. Buka menu **Pengaturan** (ikon gerigi/slider di pojok kanan atas) untuk memasukkan **Gemini API Key**.
-4. Klik **Simpan Pengaturan** dan aplikasi siap digunakan untuk proses batch metadata!
-
----
-
-> 💡 **Informasi Pengembang**: Dikembangkan oleh **BRKH STUDIO** untuk kebutuhan workflow kontributor microstock profesional.
+3. Buka menu **Pengaturan** untuk memasukkan **Gemini API Key**.
+4. Klik **Simpan Pengaturan** dan aplikasi siap digunakan!

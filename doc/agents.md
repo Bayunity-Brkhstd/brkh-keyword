@@ -166,7 +166,16 @@ Jika Anda adalah AI Agent yang memodifikasi codebase ini, Anda **WAJIB** mematuh
    - Semua bridge method di `DesktopBridge` (`main.py`) harus mengembalikan `dict` bertipe `{"status": "success"|"error", "data": ..., "message": ...}`.
 5. **Sensor Teks API Key**:
    - Jangan menghapus kelas `.masked-api-key` atau logika `isApiKeyVisible` pada `script.js` demi menjaga privasi kunci API pengguna.
+6. **Alur Perubahan Versi (Version Bump Workflow v1.0.x)**:
+   - Folder Google Drive Utama: `https://drive.google.com/drive/folders/14724m0TmLfqovKGj26beYAigJTfuE6Zo?usp=drive_link`
+   - Setiap rilis baru menaikkan angka versi paling belakang (`v1.0.0` -> `v1.0.1` -> `v1.0.2` -> `v1.0.3`, dst.).
+   - Saat rilis versi baru:
+     1. Ubah `CURRENT_VERSION` di `core/updater.py`.
+     2. Jalankan `python build_exe.py` untuk menghasilkan file `dist/StockMetaStudio.exe`.
+     3. Upload `StockMetaStudio.exe` baru ke folder versi bersangkutan di Google Drive (misal `stock meta studio/v1.0.1/`).
+     4. Perbarui `download_url` dan `version` di `version.json` agar terbaca oleh seluruh klien aplikasi aktif.
 
 ---
 
 > 💡 **Tips AI Agent**: Baca berkas ini terlebih dahulu sebelum membaca file source code spesifik untuk menghemat token konteks dan memahami relasi antar modul secara langsung.
+
