@@ -30,10 +30,12 @@ StockMeta Studio by BRKH STUDIO adalah aplikasi desktop mandiri berbasis Python 
 
 ## 📁 Struktur Dokumentasi
 
+* 🤖 [`doc/agents.md`](./doc/agents.md): Peta Utama Arsitektur, Fungsi & Alur Data untuk AI Agent
 * 📐 [`doc/architecture.md`](./doc/architecture.md): Arsitektur Perangkat Lunak & Diagram Sistem
 * 📖 [`doc/documentation.md`](./doc/documentation.md): Panduan Pengguna & Pengembang Lengkap
 * 🚀 [`GITHUB_RELEASE.md`](./GITHUB_RELEASE.md): Form Rilis Resmi GitHub v1.0.0
 * ⚖️ [`doc/LICENSE`](./doc/LICENSE): Lisensi Perangkat Lunak MIT (BRKH STUDIO)
+
 
 ---
 

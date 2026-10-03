@@ -82,6 +82,21 @@ def check_for_updates(update_url: str = DEFAULT_UPDATE_URL) -> dict:
                 "message": "Format respon endpoint tidak valid."
             }
 
+    except httpx.HTTPStatusError as e:
+        status_code = e.response.status_code if e.response else None
+        if status_code == 404:
+            print("[UPDATER INFO] Remote version manifest belum dipublikasikan di repository (404).")
+        else:
+            print(f"[UPDATER WARNING] HTTP error {status_code} saat mengecek update: {e}")
+        return {
+            "status": "info" if status_code == 404 else "error",
+            "has_update": False,
+            "current_version": CURRENT_VERSION,
+            "latest_version": CURRENT_VERSION,
+            "download_url": "",
+            "release_notes": "",
+            "message": f"HTTP {status_code}: Remote version manifest tidak ditemukan." if status_code == 404 else str(e)
+        }
     except Exception as e:
         print(f"[UPDATER WARNING] Gagal memeriksa pembaruan: {e}")
         return {
@@ -93,6 +108,7 @@ def check_for_updates(update_url: str = DEFAULT_UPDATE_URL) -> dict:
             "release_notes": "",
             "message": str(e)
         }
+
 
 
 def apply_update(download_url: str) -> dict:
