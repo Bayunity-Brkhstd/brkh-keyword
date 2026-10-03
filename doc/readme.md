@@ -1,4 +1,4 @@
-# StockMeta Studio by BRKH STUDIO (v1.0.0)
+# StockMeta Studio by BRKH STUDIO (v1.0.3)
 
 > **Microstock Metadata Curation Studio & Direct Binary IPTC/EXIF/XMP Injector by BRKH STUDIO**
 
@@ -6,17 +6,18 @@ StockMeta Studio by BRKH STUDIO adalah aplikasi desktop mandiri berbasis Python 
 
 ---
 
-## 📥 Link Unduhan Aplikasi (v1.0.0)
+## 📥 Link Unduhan Aplikasi (v1.0.3)
 
-* 🚀 **Download Executable (.exe)**: [StockMetaStudio.exe via Google Drive](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9)
-* 👁️ **Link Mirror Google Drive**: [Buka di Google Drive](https://drive.google.com/file/d/1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9/view?usp=drive_link)
+* 🚀 **Download Executable (.exe v1.0.3)**: [StockMetaStudio.exe v1.0.3 via Google Drive](https://drive.google.com/uc?export=download&id=1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5)
+* 👁️ **Link Mirror Google Drive v1.0.3**: [Buka v1.0.3 di Google Drive](https://drive.google.com/file/d/1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5/view?usp=sharing)
+* 📂 **Folder Utama Rilis Google Drive**: [Buka Master Folder Google Drive](https://drive.google.com/drive/folders/14724m0TmLfqovKGj26beYAigJTfuE6Zo?usp=drive_link)
 
 ---
 
-## ✨ Fitur Unggulan Versi 1.0.0
+## ✨ Fitur Unggulan Versi 1.0.3
 
-* 🤖 **Gemini 2.5 / 1.5 / 3.8 / 2.0 Flash Vision AI:** Analisis gambar cerdas berbasis model AI terbaru dari Google dengan fitur **503 Instant Fallback** otomatis saat server sibuk.
-* 🚀 **In-App Auto-Update Mandiri (`core/updater.py`):** Pengecekan dan pembaruan aplikasi otomatis di background tanpa memerlukan backend server kustom.
+* 🤖 **Gemini 2.5 & 3.x Flash Vision AI:** Analisis gambar cerdas berbasis model AI terbaru (`gemini-2.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.8-flash`) dengan **503 Instant Fallback** otomatis saat server sibuk.
+* 🚀 **In-App Auto-Update Mandiri (`core/updater.py`):** Pengecekan dan pembaruan aplikasi otomatis di background dengan penanganan otomatis halaman peringatan virus scan Google Drive.
 * 🔒 **API Key Sensor & Eye Toggle:** Melindungi kunci API Gemini di menu Pengaturan dengan sensor bintang (`*`) dan tombol toggle ikon mata (*Lihat Key* / *Sembunyikan*).
 * 🎯 **Niche Category / Theme Selector & Uji Sampel Tema:** Pilihan kategori spesifik (Text Effect, Vector, UI/UX, Icon, Isometric, Poster, 3D, Pattern, Character, Logo, Background) untuk memandu AI.
 * 📈 **Riset Buyer Demand & Single-Word High-CTR:** Meriset kueri pencarian pembeli real-time dari Google & Bing dan menyaring kata kunci tunggal bernilai jual tinggi.
@@ -35,13 +36,12 @@ StockMeta Studio by BRKH STUDIO adalah aplikasi desktop mandiri berbasis Python 
 * 📖 [`documentation.md`](./documentation.md): Panduan Pengguna & Pengembang Lengkap
 * ⚖️ [`LICENSE`](./LICENSE): Lisensi Perangkat Lunak MIT (BRKH STUDIO)
 
-
 ---
 
 ## 🚀 Cara Menjalankan
 
 ### Opsi A: Menggunakan Executable Mandiri (.exe)
-1. Unduh `StockMetaStudio.exe` dari [Link Google Drive](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9).
+1. Unduh `StockMetaStudio.exe` v1.0.3 dari [Link Google Drive](https://drive.google.com/uc?export=download&id=1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5).
 2. Jalankan file `StockMetaStudio.exe` langsung di OS Windows tanpa instalasi Python.
 
 ### Opsi B: Mengembangkan via Python Source Code

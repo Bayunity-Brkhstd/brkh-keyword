@@ -9,7 +9,7 @@ from packaging import version as pkg_version
 
 import urllib.parse
 
-CURRENT_VERSION = "1.0.0"
+CURRENT_VERSION = "1.0.3"
 DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/Bayunity-Brkhstd/brkh-keyword/main/version.json"
 
 

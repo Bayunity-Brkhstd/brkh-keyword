@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
-  "download_url": "https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9",
-  "web_url": "https://drive.google.com/file/d/1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9/view?usp=drive_link",
+  "version": "1.0.3",
+  "download_url": "https://drive.google.com/uc?export=download&id=1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5",
+  "web_url": "https://drive.google.com/file/d/1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5/view?usp=sharing",
   "master_folder_url": "https://drive.google.com/drive/folders/14724m0TmLfqovKGj26beYAigJTfuE6Zo?usp=drive_link",
-  "release_notes": "StockMeta Studio v1.0.0 Rilis Resmi. Fitur In-App Auto-Update, Sensor API Key, Curation Gemini AI, dan Direct IPTC Metadata Injector.",
+  "release_notes": "StockMeta Studio v1.0.3 Rilis Pembaruan. Fitur In-App Auto-Update, Sensor API Key, Curation Gemini AI (Model 2.5 & 3.x), dan Direct IPTC/EPS Metadata Injector.",
   "pub_date": "2026-10-03"
 }
