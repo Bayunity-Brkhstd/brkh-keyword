@@ -36,3 +36,17 @@
 .processing-pulse {
     animation: pulse-border 2s infinite ease-in-out;
 }
+
+/* Masked API Key Sensor CSS */
+.masked-api-key {
+    -webkit-text-security: disc !important;
+    text-security: disc !important;
+    letter-spacing: 0.15em;
+}
+
+.unmasked-api-key {
+    -webkit-text-security: none !important;
+    text-security: none !important;
+    letter-spacing: normal;
+}
+

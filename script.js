@@ -1110,6 +1110,43 @@ window.addEventListener('DOMContentLoaded', async () => {
     const btnUploadKeysTxt = document.getElementById('btnUploadKeysTxt');
     const keysFileInput = document.getElementById('keysFileInput');
 
+    let isApiKeyVisible = false;
+
+    function applyApiKeySensorState() {
+        const apiKeyEyeIcon = document.getElementById('apiKeyEyeIcon');
+        const apiKeyEyeText = document.getElementById('apiKeyEyeText');
+
+        if (apiKeyInput) {
+            if (isApiKeyVisible) {
+                apiKeyInput.classList.remove('masked-api-key');
+                apiKeyInput.classList.add('unmasked-api-key');
+            } else {
+                apiKeyInput.classList.remove('unmasked-api-key');
+                apiKeyInput.classList.add('masked-api-key');
+            }
+        }
+
+        if (apiKeyEyeIcon && apiKeyEyeText) {
+            if (isApiKeyVisible) {
+                apiKeyEyeIcon.className = 'fa-solid fa-eye-slash text-amber-400';
+                apiKeyEyeText.textContent = 'Sembunyikan';
+            } else {
+                apiKeyEyeIcon.className = 'fa-solid fa-eye text-indigo-400';
+                apiKeyEyeText.textContent = 'Lihat Key';
+            }
+        }
+    }
+
+    const btnToggleApiKeySensor = document.getElementById('btnToggleApiKeySensor');
+    if (btnToggleApiKeySensor) {
+        btnToggleApiKeySensor.addEventListener('click', () => {
+            isApiKeyVisible = !isApiKeyVisible;
+            applyApiKeySensorState();
+            const lines = apiKeyInput ? apiKeyInput.value.split('\n').map(s => s.trim()).filter(Boolean) : [];
+            updateKeyRotationUI(lines, false);
+        });
+    }
+
     function updateKeyRotationUI(keys = [], syncTextarea = true) {
         const keyCountBadge = document.getElementById('keyCountBadge');
         const apiKeysList = document.getElementById('apiKeysList');
@@ -1133,12 +1170,18 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (apiKeysList) {
             apiKeysList.innerHTML = '';
             cleanKeys.forEach((key, idx) => {
-                const masked = key.length > 10 ? `${key.substring(0, 6)}...${key.substring(key.length - 4)}` : key;
+                let displayText = '';
+                if (isApiKeyVisible) {
+                    displayText = key.length > 12 ? `${key.substring(0, 6)}...${key.substring(key.length - 4)}` : key;
+                } else {
+                    displayText = '*'.repeat(Math.min(key.length, 20));
+                }
+
                 const chip = document.createElement('span');
                 chip.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-800 text-slate-300 text-[11px] font-mono border border-slate-700 shadow-sm';
                 chip.innerHTML = `
-                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                    <span>#${idx + 1}: ${escapeHtml(masked)}</span>
+                    <span class="w-1.5 h-1.5 rounded-full ${isApiKeyVisible ? 'bg-amber-400' : 'bg-indigo-400'}"></span>
+                    <span>#${idx + 1}: ${escapeHtml(displayText)}</span>
                     <button type="button" class="text-slate-500 hover:text-rose-400 ml-0.5 transition" title="Hapus Key #${idx + 1}" onclick="removeSingleKey(${idx})">
                         <i class="fa-solid fa-xmark text-[10px]"></i>
                     </button>
@@ -1287,16 +1330,150 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.updateAssetTitle = updateAssetTitle;
     window.updateAssetDesc = updateAssetDesc;
 
-    // Load initial key if PyWebView bridge ready
-    window.addEventListener('pywebviewready', async () => {
-        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_api_keys) {
-            const keys = await window.pywebview.api.get_api_keys();
-            if (keys && keys.length > 0) {
-                updateKeyRotationUI(keys);
-                showToast('Aplikasi Siap', `${keys.length} Kunci API Gemini terhubung (Auto-Rolling).`, 'success');
-            } else {
-                showToast('Perhatian', 'Kunci API Gemini belum dikonfigurasi. Buka menu Pengaturan.', 'warning');
+    // In-App Auto-Update System Logic
+    let activeUpdatePayload = null;
+
+    async function checkForUpdates(isManual = false) {
+        if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.check_for_updates) {
+            if (isManual) {
+                showToast('Mode Browser', 'Fitur Auto-Update hanya aktif di lingkungan PyWebView Desktop Windows.', 'warning');
             }
+            return;
+        }
+
+        try {
+            if (isManual) {
+                showToast('Pemeriksaan Pembaruan', 'Menghubungkan ke server pembaruan...', 'info');
+            }
+
+            const res = await window.pywebview.api.check_for_updates();
+
+            if (res && res.current_version) {
+                const elVer = document.getElementById('settingsCurrentVersion');
+                if (elVer) elVer.textContent = `v${res.current_version}`;
+            }
+
+            if (res && res.status === 'success' && res.has_update) {
+                activeUpdatePayload = res;
+
+                const updateBanner = document.getElementById('updateBanner');
+                const updateTitle = document.getElementById('updateTitle');
+                const updateVersionBadge = document.getElementById('updateVersionBadge');
+                const updateReleaseNotes = document.getElementById('updateReleaseNotes');
+
+                if (updateTitle) updateTitle.textContent = `Pembaruan v${res.latest_version} Telah Tersedia!`;
+                if (updateVersionBadge) updateVersionBadge.textContent = `v${res.latest_version}`;
+                if (updateReleaseNotes) updateReleaseNotes.textContent = res.release_notes || 'Pembaruan versi terbaru siap diinstal.';
+
+                if (updateBanner) {
+                    updateBanner.classList.remove('hidden');
+                }
+
+                addLog(`[AUTO-UPDATE] Pembaruan v${res.latest_version} tersedia: ${res.download_url}`, 'info');
+                showToast('Pembaruan Tersedia!', `StockMeta Studio v${res.latest_version} siap diinstal.`, 'info');
+            } else {
+                if (isManual) {
+                    const currentVer = (res && res.current_version) || '1.0.0';
+                    showToast('Versi Terkini', `Aplikasi Anda sudah menggunakan versi terbaru (v${currentVer}).`, 'success');
+                }
+                addLog(`[AUTO-UPDATE] Aplikasi menggunakan versi terkini (v${(res && res.current_version) || '1.0.0'}).`, 'info');
+            }
+        } catch (err) {
+            console.error("[AUTO-UPDATE ERROR]", err);
+            addLog(`[AUTO-UPDATE ERROR] Gagal memeriksa pembaruan: ${err.message || err}`, 'error');
+            if (isManual) {
+                showToast('Gagal Cek Update', err.message || 'Tidak dapat terhubung ke server pembaruan.', 'error');
+            }
+        }
+    }
+
+    function initAutoUpdateUI() {
+        const btnDismissUpdate = document.getElementById('btnDismissUpdate');
+        const btnApplyUpdate = document.getElementById('btnApplyUpdate');
+        const btnManualCheckUpdate = document.getElementById('btnManualCheckUpdate');
+        const updateBanner = document.getElementById('updateBanner');
+        const updateProgressOverlay = document.getElementById('updateProgressOverlay');
+        const updateProgressStatus = document.getElementById('updateProgressStatus');
+
+        if (btnDismissUpdate) {
+            btnDismissUpdate.addEventListener('click', () => {
+                if (updateBanner) {
+                    updateBanner.classList.add('hidden');
+                }
+                addLog('[AUTO-UPDATE] Banner pembaruan ditutup oleh pengguna.', 'info');
+            });
+        }
+
+        if (btnApplyUpdate) {
+            btnApplyUpdate.addEventListener('click', async () => {
+                if (!activeUpdatePayload || !activeUpdatePayload.download_url) {
+                    showToast('Error Update', 'URL unduhan pembaruan tidak ditemukan.', 'error');
+                    return;
+                }
+
+                if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.apply_update) {
+                    showToast('Mode Browser', 'Fungsi auto-update memerlukan PyWebView biner.', 'warning');
+                    return;
+                }
+
+                btnApplyUpdate.disabled = true;
+                btnDismissUpdate.disabled = true;
+                btnApplyUpdate.classList.add('opacity-50', 'cursor-not-allowed');
+
+                if (updateProgressOverlay) updateProgressOverlay.classList.remove('hidden');
+                if (updateProgressStatus) updateProgressStatus.textContent = `Mengunduh paket biner v${activeUpdatePayload.latest_version}...`;
+
+                addLog(`[AUTO-UPDATE] Memulai unduhan update dari: ${activeUpdatePayload.download_url}`, 'info');
+
+                try {
+                    const res = await window.pywebview.api.apply_update(activeUpdatePayload.download_url);
+                    if (res && res.status === 'success') {
+                        if (updateProgressStatus) {
+                            updateProgressStatus.textContent = 'Pembaruan berhasil diunduh! Memulai ulang aplikasi...';
+                        }
+                        showToast('Update Berhasil', res.message || 'Aplikasi akan restart secara otomatis.', 'success');
+                        addLog('[AUTO-UPDATE] Launcher script dieksekusi. Memulai ulang aplikasi...', 'success');
+                    } else {
+                        throw new Error(res.message || 'Gagal menerapkan pembaruan.');
+                    }
+                } catch (err) {
+                    console.error("[APPLY UPDATE ERROR]", err);
+                    if (updateProgressOverlay) updateProgressOverlay.classList.add('hidden');
+                    btnApplyUpdate.disabled = false;
+                    btnDismissUpdate.disabled = false;
+                    btnApplyUpdate.classList.remove('opacity-50', 'cursor-not-allowed');
+                    showToast('Gagal Update', err.message || 'Terjadi kesalahan saat mengunduh update.', 'error');
+                    addLog(`[AUTO-UPDATE ERROR] ${err.message || err}`, 'error');
+                }
+            });
+        }
+
+        if (btnManualCheckUpdate) {
+            btnManualCheckUpdate.addEventListener('click', () => {
+                checkForUpdates(true);
+            });
+        }
+    }
+
+    initAutoUpdateUI();
+
+    // Load initial key and check updates if PyWebView bridge ready
+    window.addEventListener('pywebviewready', async () => {
+        if (window.pywebview && window.pywebview.api) {
+            if (window.pywebview.api.get_api_keys) {
+                const keys = await window.pywebview.api.get_api_keys();
+                if (keys && keys.length > 0) {
+                    updateKeyRotationUI(keys);
+                    showToast('Aplikasi Siap', `${keys.length} Kunci API Gemini terhubung (Auto-Rolling).`, 'success');
+                } else {
+                    showToast('Perhatian', 'Kunci API Gemini belum dikonfigurasi. Buka menu Pengaturan.', 'warning');
+                }
+            }
+
+            // Run update check in background worker
+            setTimeout(() => {
+                checkForUpdates(false);
+            }, 600);
         }
     });
 

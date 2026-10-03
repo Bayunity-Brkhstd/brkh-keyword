@@ -12,6 +12,8 @@ from core.buyer_demand import BuyerDemandFetcher
 from core.keyword_analyzer import KeywordAnalyzer
 from core.keyword_cluster import KeywordClusterer
 from core.keyword_serp import KeywordSERP
+from core.updater import check_for_updates, apply_update, CURRENT_VERSION
+
 
 class DesktopBridge:
     """
@@ -307,8 +309,29 @@ class DesktopBridge:
                 "message": str(e)
             }
 
+    def check_for_updates(self, custom_url: str = "") -> dict:
+        """
+        Panggil logika pembaruan di core/updater.py.
+        """
+        if custom_url and isinstance(custom_url, str) and custom_url.strip():
+            return check_for_updates(update_url=custom_url.strip())
+        return check_for_updates()
+
+    def apply_update(self, download_url: str) -> dict:
+        """
+        Unduh paket biner/patch baru dan eksekusi detached launcher script untuk menimpa app executable.
+        """
+        return apply_update(download_url=download_url)
+
+    def get_app_version(self) -> str:
+        """
+        Kembalikan versi lokal aplikasi saat ini.
+        """
+        return CURRENT_VERSION
+
 
 if __name__ == '__main__':
+
     import sys
     if hasattr(sys, '_MEIPASS'):
         base_dir = sys._MEIPASS
