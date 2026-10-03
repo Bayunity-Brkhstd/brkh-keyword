@@ -11,6 +11,7 @@ StockMeta Studio by BRKH STUDIO adalah aplikasi desktop mandiri berbasis Python 
 * 🚀 **Download Executable (.exe v1.0.3)**: [StockMetaStudio.exe v1.0.3 via Google Drive](https://drive.google.com/uc?export=download&id=1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5)
 * 👁️ **Link Mirror Google Drive v1.0.3**: [Buka v1.0.3 di Google Drive](https://drive.google.com/file/d/1vhbDJA1fUnT8nejoQK0pRHLGW3FEAjz5/view?usp=sharing)
 * 📂 **Folder Utama Rilis Google Drive**: [Buka Master Folder Google Drive](https://drive.google.com/drive/folders/14724m0TmLfqovKGj26beYAigJTfuE6Zo?usp=drive_link)
+* 🎞️ **Tonton Video APK Bekerja Secara Singkat**: [Video APK Google Drive](https://drive.google.com/file/d/1o8qZxU6wWGWLsvsp2zfqIp2k41B0k6p1/view?usp=sharing)
 
 ---
 
