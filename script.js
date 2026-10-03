@@ -982,13 +982,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     dropZone.addEventListener('click', triggerFilePicker);
 
     fileInput.addEventListener('change', (e) => {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.select_files) {
+            triggerFilePicker();
+            fileInput.value = '';
+            return;
+        }
+
         if (e.target.files && e.target.files.length > 0) {
             Array.from(e.target.files).forEach(file => {
+                const fullPath = file.path || file.name;
                 const assetId = 'asset_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
                 state.assets.push({
                     id: assetId,
                     filename: file.name,
-                    filePath: file.name,
+                    filePath: fullPath,
                     fileSize: (file.size / 1024).toFixed(1) + ' KB',
                     previewUrl: URL.createObjectURL(file),
                     status: 'queued',
@@ -1021,12 +1028,25 @@ window.addEventListener('DOMContentLoaded', async () => {
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            let invalidPathCount = 0;
+            let addedCount = 0;
+
             Array.from(e.dataTransfer.files).forEach(file => {
+                const fullPath = file.path || '';
+                const isAbsolute = fullPath && (fullPath.includes('\\') || fullPath.includes('/'));
+
+                if (!isAbsolute && window.pywebview && window.pywebview.api && window.pywebview.api.select_files) {
+                    invalidPathCount++;
+                    return;
+                }
+
+                const finalPath = isAbsolute ? fullPath : file.name;
                 const assetId = 'asset_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
                 state.assets.push({
                     id: assetId,
                     filename: file.name,
-                    filePath: file.path || file.name,
+                    filePath: finalPath,
                     fileSize: (file.size / 1024).toFixed(1) + ' KB',
                     previewUrl: URL.createObjectURL(file),
                     status: 'queued',
@@ -1035,10 +1055,18 @@ window.addEventListener('DOMContentLoaded', async () => {
                     assetType: 'Menunggu...',
                     keywords: []
                 });
+                addedCount++;
             });
+
             updateStats();
             renderAssets();
-            showToast('Aset Ditambahkan', `${e.dataTransfer.files.length} file ditambahkan dari Drag & Drop.`, 'info');
+
+            if (invalidPathCount > 0) {
+                showToast('Menggunakan Picker Native', 'Memuat File Picker Native agar path folder file terpilih presisi.', 'info');
+                triggerFilePicker();
+            } else if (addedCount > 0) {
+                showToast('Aset Ditambahkan', `${addedCount} file ditambahkan dari Drag & Drop.`, 'info');
+            }
         }
     });
 

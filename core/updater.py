@@ -7,8 +7,45 @@ import threading
 import httpx
 from packaging import version as pkg_version
 
+import urllib.parse
+
 CURRENT_VERSION = "1.0.0"
 DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/Bayunity-Brkhstd/brkh-keyword/main/version.json"
+
+
+def resolve_direct_download_url(url: str, client: httpx.Client) -> str:
+    """
+    If URL points to Google Drive, bypass virus scan warning HTML page and extract direct download link.
+    """
+    if "drive.google.com" in url or "drive.usercontent.google.com" in url:
+        match_id = re.search(r'/file/d/([a-zA-Z0-9_-]+)', url)
+        if match_id:
+            file_id = match_id.group(1)
+            url = f"https://drive.google.com/uc?export=download&id={file_id}"
+
+        try:
+            resp = client.get(url)
+            content_type = resp.headers.get("content-type", "").lower()
+
+            if "text/html" in content_type and "download-form" in resp.text:
+                action_match = re.search(r'<form [^>]*action=["\']([^"\']+)["\']', resp.text)
+                form_action = action_match.group(1) if action_match else "https://drive.usercontent.google.com/download"
+                
+                inputs = re.findall(r'<input [^>]*name=["\']([^"\']+)["\'] [^>]*value=["\']([^"\']+)["\']', resp.text)
+                inputs_dict = {name: val for name, val in inputs}
+                
+                inputs_rev = re.findall(r'<input [^>]*value=["\']([^"\']+)["\'] [^>]*name=["\']([^"\']+)["\']', resp.text)
+                for val, name in inputs_rev:
+                    inputs_dict[name] = val
+
+                if inputs_dict:
+                    query_str = urllib.parse.urlencode(inputs_dict)
+                    return f"{form_action}?{query_str}"
+        except Exception as e:
+            print(f"[UPDATER RESOLVE WARNING] Gagal mengurai link Google Drive: {e}")
+
+    return url
+
 
 
 def parse_version_tuple(v_str: str) -> tuple:
@@ -128,12 +165,16 @@ def apply_update(download_url: str) -> dict:
 
         # Download update binary with httpx
         headers = {"User-Agent": "StockMetaStudio-Updater/1.0"}
-        with httpx.Client(timeout=60.0, follow_redirects=True, headers=headers) as client:
-            with client.stream("GET", download_url) as resp:
+        with httpx.Client(timeout=120.0, follow_redirects=True, headers=headers) as client:
+            direct_url = resolve_direct_download_url(download_url, client)
+            print(f"[UPDATER] Downloading binary from resolved URL: {direct_url[:80]}...")
+            
+            with client.stream("GET", direct_url) as resp:
                 resp.raise_for_status()
                 with open(downloaded_file, "wb") as f:
-                    for chunk in resp.iter_bytes(chunk_size=8192):
+                    for chunk in resp.iter_bytes(chunk_size=16384):
                         f.write(chunk)
+
 
         is_frozen = getattr(sys, 'frozen', False)
         if is_frozen:

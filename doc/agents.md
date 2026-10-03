@@ -161,7 +161,7 @@ Jika Anda adalah AI Agent yang memodifikasi codebase ini, Anda **WAJIB** mematuh
 2. **Batas Memori RAM (< 130 MB)**:
    - Preview thumbnail di web browser **WAJIB** berupa string Base64 resolusi rendah (max 280px) yang dihasilkan melalui Python Pillow, diikuti oleh pemanggilan explicit `gc.collect()`.
 3. **Penanganan Error Server 503 & Rotasi Key**:
-   - Jika mengubah `memory_curator.py`, pastikan fallback model (`gemini-2.5-flash` -> `gemini-1.5-flash` -> dst.) dan rotasi key round-robin tetap terjaga. Jangan biarkan exception 429 atau 503 membuat batch mati pertengahan jalan.
+   - Jika mengubah `memory_curator.py`, pastikan fallback model (`gemini-2.5-flash` -> `gemini-3.5-flash-lite` -> `gemini-3.5-flash` -> dst.) dan rotasi key round-robin tetap terjaga. Jangan biarkan exception 429 atau 503 membuat batch mati pertengahan jalan.
 4. **Respon IPC PyWebView Berbentuk Dict**:
    - Semua bridge method di `DesktopBridge` (`main.py`) harus mengembalikan `dict` bertipe `{"status": "success"|"error", "data": ..., "message": ...}`.
 5. **Sensor Teks API Key**:

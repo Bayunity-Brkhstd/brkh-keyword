@@ -168,8 +168,18 @@ ATURAN KEYWORDS:
         delay = 2.0
         last_error = None
 
-        # Priority model candidate list (stable & high capacity vision models)
-        model_candidates = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        # Priority model candidate list (active & high capacity Gemini vision models)
+        model_candidates = [
+            "gemini-2.5-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-3.5-flash",
+            "gemini-3.6-flash",
+            "gemini-3.7-flash",
+            "gemini-3.8-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-pro"
+        ]
+
 
         for attempt in range(max_attempts):
             key, client, sdk_type, key_idx = self.get_next_key_client()

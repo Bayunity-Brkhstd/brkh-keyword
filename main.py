@@ -208,10 +208,15 @@ class DesktopBridge:
 
         file_path = normalize_path(file_path)
         if not os.path.exists(file_path):
+            if not os.path.isabs(file_path):
+                hint = " (Path berupa nama file relatif. Harap klik tombol Upload File untuk membuka File Picker Native Windows)."
+            else:
+                hint = " (Pastikan folder/file tidak dihapus, dipindahkan, atau terputus dari jaringan)."
             return {
                 "status": "error",
-                "message": f"File tidak ditemukan pada path: {file_path}"
+                "message": f"File tidak ditemukan pada path: {file_path}{hint}"
             }
+
 
         try:
             # 1. Vision AI Curation with Auto-Rolling API Key Rotation & Theme Guidance
