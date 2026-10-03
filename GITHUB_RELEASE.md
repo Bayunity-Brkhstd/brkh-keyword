@@ -4,12 +4,19 @@
 
 ---
 
+## 📥 Link Unduhan Resmi (Official Download)
+
+- 🔗 **Direct Download (.exe)**: [Unduh StockMetaStudio.exe via Google Drive](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9)
+- 👁️ **Link Mirror Google Drive**: [Lihat File di Google Drive](https://drive.google.com/file/d/1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9/view?usp=drive_link)
+
+---
+
 ## 🌟 Fitur Unggulan Versi 1.0.0
 
 - 🤖 **AI Vision Metadata Curation**: Ekstraksi Judul, Deskripsi, dan 35–45 Kata Kunci presisi menggunakan model Gemini Vision.
 - 🔄 **Auto-Rolling Multi-API Key**: Mendukung hingga 30 API Keys Gemini dengan penanganan otomatis batasan kuota HTTP 429.
 - 🔒 **API Key Sensor & Masking**: Melindungi kode API Key pengguna dengan fitur sensor bintang (`*`) dan tombol toggle ikon mata (*Lihat/Sembunyikan*).
-- 🚀 **In-App Auto-Update Mandiri**: Fitur pemeriksa & pemasang pembaruan otomatis tanpa backend server kustom (menggunakan GitHub Releases / Raw JSON).
+- 🚀 **In-App Auto-Update Mandiri**: Fitur pemeriksa & pemasang pembaruan otomatis tanpa backend server kustom (`core/updater.py`).
 - 📸 **Direct IPTC & EPS Vector Injector**: Penulisan biner langsung ke header EXIF/IPTC file gambar dan file vektor EPS tanpa perlu software pihak ketiga.
 - 📊 **Niche Theme Selector & Multi-Platform Presets**: Optimasi gaya untuk Adobe Stock, Shutterstock, Freepik, Getty Images, dan kategori produk spesifik (3D, Text Effect, UI/UX, dsb).
 
@@ -17,18 +24,18 @@
 
 ## 📦 Aset Rilis (Release Assets)
 
-| File / Aset | Ukuran Paket | Deskripsi |
+| File / Aset | Sumber Unduhan | Deskripsi |
 | :--- | :--- | :--- |
-| **`StockMetaStudio.exe`** | `dist/StockMetaStudio.exe` | Binary Portabel Windows (Single Executable Standalone, Tanpa Instalasi) |
-| **`version.json`** | ~1 KB | File manifest pembaruan versi mandiri |
+| **`StockMetaStudio.exe`** | [Download via Google Drive](https://drive.google.com/uc?export=download&id=1QP2BFVeqrFIhvatQFSoqRa69q0uipKm9) | Binary Portabel Windows (Standalone .exe, ~113 MB) |
+| **`version.json`** | [Lihat Manifest `version.json`](./version.json) | File manifest pembaruan versi mandiri v1.0.0 |
 
 ---
 
-## 📋 Catatan Rilis & Log Perubahan (Changelog)
+## 📋 Catatan Rilis & Log Perubahan (Changelog v1.0.0)
 
 ### Added
 - [NEW] Sistem In-App Auto-Update mandiri (`core/updater.py`) yang terintegrasi dengan PyWebView bridge.
-- [NEW] Fitur sensor teks API Key di Modal Pengaturan beserta tombol toggle ikon mata.
+- [NEW] Fitur sensor teks API Key di Modal Pengaturan beserta tombol toggle ikon mata (`Lihat Key` / `Sembunyikan`).
 - [NEW] Komponen Banner Pembaruan UI modern di Dashboard Utama dengan animasi progress bar.
 
 ### Improved
@@ -39,7 +46,7 @@
 
 ## 🛠️ Panduan Instalasi & Penggunaan
 
-1. Unduh file **`StockMetaStudio.exe`** dari tabel *Assets* di bawah.
+1. Unduh file **`StockMetaStudio.exe`** melalui link Google Drive di atas.
 2. Jalankan `StockMetaStudio.exe` di OS Windows (Windows 10/11 64-bit).
 3. Buka menu **Pengaturan** (ikon gerigi/slider di pojok kanan atas) untuk memasukkan **Gemini API Key**.
 4. Klik **Simpan Pengaturan** dan aplikasi siap digunakan untuk proses batch metadata!
