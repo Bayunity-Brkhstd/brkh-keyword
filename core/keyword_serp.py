@@ -1,5 +1,6 @@
 import httpx
 import re
+from core.language_filter import is_english_keyword
 
 class KeywordSERP:
     """
@@ -33,10 +34,11 @@ class KeywordSERP:
                         if clean and len(clean) > 2 and clean != seed_query.lower():
                             # Extract individual single-word terms
                             for token in re.findall(r'[a-zA-Z]+', clean):
-                                if len(token) > 2:
+                                if len(token) > 2 and is_english_keyword(token):
                                     related_terms.add(token)
         except Exception:
             pass
+
 
         return list(related_terms)
 

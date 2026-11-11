@@ -10,7 +10,16 @@ const state = {
     customNotes: "",
     nicheTheme: "auto",
     filter: "all",
-    preset: "universal"
+    preset: "universal",
+    customRules: {
+        bannedKeywords: "",
+        mandatoryKeywords: "",
+        mandatoryAtEnd: false,
+        titlePattern: "",
+        descriptionPattern: "",
+        strictEnglish: true,
+        isExpanded: true
+    }
 };
 
 // Realtime Console Logger State
@@ -280,9 +289,90 @@ const PRESETS = {
 
 const STOPWORDS = new Set(['the', 'and', 'in', 'on', 'with', 'for', 'of', 'at', 'to', 'from', 'by', 'an', 'a']);
 
-function sanitizeWord(str) {
-    return (str || '').toLowerCase().replace(/[^a-z]/g, '').trim();
+const INDONESIAN_WORDS_SET = new Set([
+    'gambar', 'desain', 'vektor', 'hiasan', 'kertas', 'latar', 'belakang', 'tulisan', 
+    'teks', 'warna', 'merah', 'biru', 'kuning', 'hijau', 'hitam', 'putih', 'emas', 
+    'perak', 'sekolah', 'anak', 'wanita', 'pria', 'laki', 'perempuan', 'makanan', 
+    'minuman', 'rumah', 'pohon', 'bunga', 'daun', 'alam', 'pemandangan', 'langit', 
+    'bintang', 'bulan', 'matahari', 'awan', 'air', 'api', 'tanah', 'kota', 'gedung', 
+    'jalan', 'mobil', 'motor', 'bisnis', 'uang', 'belanja', 'diskon', 'promo', 'murah',
+    'lebaran', 'puasa', 'idul', 'fitri', 'adha', 'mudik', 'thr', 'ketupat', 'masjid', 
+    'ucapan', 'selamat', 'tahun', 'baru', 'ulang', 'pernikahan', 'undangan', 'bingkai', 
+    'spanduk', 'stiker', 'pola', 'motif', 'koleksi', 'kumpulan', 'elemen', 'bentuk', 
+    'ikon', 'simbol', 'grafis', 'ilustrasi', 'seni', 'lukisan', 'sketsa', 'gaya', 
+    'keren', 'cantik', 'indah', 'mewah', 'sederhana', 'abstrak', 'isometrik', 
+    'karakter', 'maskot', 'kartun', 'objek', 'bendera', 'merahputih', 'indonesia', 
+    'garuda', 'pancasila', 'kemerdekaan', 'agustus', 'pahlawan', 'peta', 'nusantara',
+    'batik', 'wayang', 'angklung', 'gamelan', 'monas', 'bali', 'ondel', 'tumpeng',
+    'rendang', 'sate', 'nasi', 'goreng', 'kerupuk', 'sambal', 'kopi', 'teh',
+    'baju', 'celana', 'topi', 'sepatu', 'tas', 'kacamata', 'jam', 'dompet',
+    'keluarga', 'ayah', 'ibu', 'kakak', 'adik', 'nenek', 'kakek', 'teman', 'sahabat',
+    'kerja', 'kantor', 'kuliah', 'mahasiswa', 'guru', 'dosen', 'siswa',
+    'buku', 'pena', 'pensil', 'meja', 'kursi', 'pintu', 'jendela', 'atap', 'dinding',
+    'kucing', 'anjing', 'burung', 'ikan', 'kuda', 'sapi', 'kambing', 'gajah', 'singa',
+    'macan', 'harimau', 'ular', 'buaya', 'monyet', 'kera', 'kelinci', 'tikus',
+    'makan', 'minum', 'tidur', 'duduk', 'berdiri', 'terbang', 'berenang',
+    'senang', 'sedih', 'marah', 'takut', 'terkejut', 'bingung', 'lelah', 'capek',
+    'sehat', 'sakit', 'kuat', 'lemah', 'cepat', 'lambat', 'tinggi', 'rendah',
+    'besar', 'kecil', 'panjang', 'pendek', 'tebal', 'tipis', 'berat', 'ringan',
+    'panas', 'dingin', 'hangat', 'sejuk', 'bersih', 'kotor', 'wangi', 'bau',
+    'lama', 'tua', 'muda', 'bagus', 'jelek', 'rusak', 'baik', 'buruk',
+    'satu', 'dua', 'tiga', 'empat', 'lima', "enam", "tujuh", "delapan", "sembilan", "sepuluh",
+    "pertama", "kedua", "ketiga", "hari", "minggu", "pagi", "siang",
+    "sore", "malam", "sekarang", "besok", "kemarin", "nanti", "dulu", "lagi",
+    "dan", "yang", "untuk", "dengan", "pada", "dari", "ke", "di", "ini", "itu",
+    "atau", "juga", "bisa", "akan", "telah", "sudah", "bukan", "tidak", "ada"
+]);
+
+function getBannedKeywordsSet() {
+    const raw = (state.customRules && state.customRules.bannedKeywords) || '';
+    if (!raw.trim()) return new Set();
+    const items = raw.split(/[,;\n]+/).map(s => s.toLowerCase().trim()).filter(Boolean);
+    const bannedSet = new Set();
+    items.forEach(it => {
+        bannedSet.add(it);
+        it.split(/[\s-]+/).forEach(p => { if (p) bannedSet.add(p); });
+    });
+    return bannedSet;
 }
+
+function isBannedKeyword(word) {
+    if (!word) return false;
+    const clean = word.toLowerCase().trim();
+    const bannedSet = getBannedKeywordsSet();
+    if (bannedSet.has(clean)) return true;
+    const parts = clean.split(/[\s-]+/);
+    for (const part of parts) {
+        if (bannedSet.has(part)) return true;
+    }
+    return false;
+}
+
+function isEnglishKeyword(word) {
+    if (!word || typeof word !== 'string') return false;
+    const clean = word.toLowerCase().trim();
+    if (clean.length < 2) return false;
+    if (!/^[a-z0-9\s-]+$/.test(clean)) return false;
+    
+    const parts = clean.split(/[\s-]+/);
+    for (const part of parts) {
+        if (INDONESIAN_WORDS_SET.has(part)) return false;
+    }
+
+    if (isBannedKeyword(clean)) return false;
+    return true;
+}
+
+function sanitizeWord(str) {
+    if (!str) return '';
+    let clean = String(str).toLowerCase().trim();
+    clean = clean.replace(/\s+/g, ' ');
+    clean = clean.replace(/^[^\w#]+|[^\w]+$/g, '');
+    if (clean.startsWith('#')) clean = clean.substring(1);
+    return clean;
+}
+
+
 
 function escapeHtml(str) {
     if (!str) return '';
@@ -407,7 +497,8 @@ async function processSingleAsset(assetId) {
                 state.minKeywords,
                 state.maxKeywords,
                 state.customNotes,
-                state.nicheTheme || "auto"
+                state.nicheTheme || "auto",
+                state.customRules
             );
 
             if (res.status === 'success' && res.data) {
@@ -734,6 +825,7 @@ function renderAssets() {
                             value="${escapeHtml(item.title)}" 
                             placeholder="${isProc ? 'Gemini 2.5 Flash sedang menyusun judul komersial 60-90 karakter...' : 'Contoh: Isometric Cloud Datacenter Server 3D Render for Network Infrastructure Banner'}" 
                             oninput="updateAssetTitle('${item.id}', this.value)"
+                            onchange="autoInjectMetadataById('${item.id}')"
                             class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 font-medium"
                         />
                     </div>
@@ -753,6 +845,7 @@ function renderAssets() {
                             rows="2" 
                             placeholder="${isProc ? 'Meringkas fungsi visual aset untuk desainer & advertiser...' : 'Deskripsi komersial otomatis...'}"
                             oninput="updateAssetDesc('${item.id}', this.value)"
+                            onchange="autoInjectMetadataById('${item.id}')"
                             class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 resize-none"
                         >${escapeHtml(item.description)}</textarea>
                     </div>
@@ -799,7 +892,7 @@ function renderAssets() {
                                 <input 
                                     type="text" 
                                     id="kwInput_${item.id}"
-                                    placeholder="Tambah keyword (1 kata tanpa spasi, pisahkan spasi/koma)..."
+                                    placeholder="Tambah keyword (contoh: 3d, 4k, cloud computing, vector illustration)..."
                                     onkeydown="handleKeywordKeydown(event, '${item.id}')"
                                     class="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
                                 />
@@ -837,33 +930,111 @@ function updateAssetDesc(id, val) {
     if (asset) asset.description = val;
 }
 
-function removeKeyword(assetId, kwIndex) {
+async function autoInjectMetadata(asset) {
+    if (!asset || !asset.filePath) return;
+    if (window.pywebview && window.pywebview.api && window.pywebview.api.reinject_metadata) {
+        try {
+            const res = await window.pywebview.api.reinject_metadata(
+                asset.filePath,
+                asset.title || '',
+                asset.description || '',
+                asset.keywords || [],
+                state.customRules
+            );
+
+            if (res && res.status === 'success') {
+                asset.status = 'completed';
+                asset.epsEmbedded = !!res.epsEmbedded;
+                asset.epsFilename = res.epsFilename || '';
+                addLog(`[AUTO-INJECT 🎯] Metadata file "${asset.filename}" ter-inject otomatis (${asset.keywords.length} tags)!`, 'success', asset.filename);
+                showToast('Ter-inject Otomatis', `Metadata file "${asset.filename}" ter-inject ke file (${asset.keywords.length} tags)!`, 'success');
+            } else if (res && res.status === 'error') {
+                addLog(`[AUTO-INJECT ERROR] Gagal inject metadata ke "${asset.filename}": ${res.message}`, 'error', asset.filename);
+                showToast('Gagal Auto-Inject', res.message, 'error');
+            }
+        } catch (err) {
+            console.error("[AUTO-INJECT EXCEPTION]", err);
+        }
+    }
+}
+
+async function autoInjectMetadataById(assetId) {
+    const asset = state.assets.find(a => a.id === assetId);
+    if (asset) {
+        await autoInjectMetadata(asset);
+    }
+}
+
+async function removeKeyword(assetId, kwIndex) {
     const asset = state.assets.find(a => a.id === assetId);
     if (asset && asset.keywords) {
         asset.keywords.splice(kwIndex, 1);
         renderAssets();
+        await autoInjectMetadata(asset);
     }
 }
 
-function addManualKeyword(assetId) {
+async function addManualKeyword(assetId) {
     const input = document.getElementById(`kwInput_${assetId}`);
     if (!input) return;
-    const val = input.value.trim().toLowerCase();
+    const val = input.value.trim();
     if (!val) return;
 
     const asset = state.assets.find(a => a.id === assetId);
-    if (asset) {
-        const rawTokens = val.split(/[\s,;.+/_|\\-]+/);
-        for (const raw of rawTokens) {
-            const cleanWord = sanitizeWord(raw);
-            if (cleanWord.length > 1 && !STOPWORDS.has(cleanWord) && !asset.keywords.includes(cleanWord)) {
+    if (!asset) return;
+
+    let candidates = [];
+    if (/[,;\n]/.test(val)) {
+        candidates = val.split(/[,;\n]+/);
+    } else {
+        const words = val.split(/\s+/).filter(Boolean);
+        if (words.length > 3) {
+            candidates = words;
+        } else {
+            candidates = [val];
+        }
+    }
+
+    let addedCount = 0;
+    let rejectedNonEnglishCount = 0;
+    let rejectedBannedCount = 0;
+
+    for (const raw of candidates) {
+        const cleanWord = sanitizeWord(raw);
+        if (cleanWord.length >= 2 && !STOPWORDS.has(cleanWord) && !asset.keywords.includes(cleanWord)) {
+            if (isBannedKeyword(cleanWord)) {
+                rejectedBannedCount++;
+            } else if (isEnglishKeyword(cleanWord)) {
                 asset.keywords.push(cleanWord);
+                addedCount++;
+            } else {
+                rejectedNonEnglishCount++;
             }
         }
-        input.value = '';
-        renderAssets();
     }
+
+    input.value = '';
+
+    if (addedCount > 0) {
+        renderAssets();
+        const newInput = document.getElementById(`kwInput_${assetId}`);
+        if (newInput) newInput.focus();
+        await autoInjectMetadata(asset);
+        if (rejectedBannedCount > 0) {
+            showToast('Kata Kunci Dilarang', `${rejectedBannedCount} kata ditolak karena ada dalam daftar Kata Kunci Dilarang!`, 'warning');
+        } else if (rejectedNonEnglishCount > 0) {
+            showToast('Filter Bahasa Inggris', `${rejectedNonEnglishCount} kata ditolak. Hanya keyword Bahasa Inggris yang diperbolehkan!`, 'warning');
+        }
+    } else if (rejectedBannedCount > 0) {
+        showToast('Ditolak (Dilarang)', 'Kata kunci ini DILARANG oleh aturan custom yang Anda atur!', 'error');
+    } else if (rejectedNonEnglishCount > 0) {
+        showToast('Ditolak (Harus Bahasa Inggris)', 'DILARANG KERAS menyisipkan keyword selain Bahasa Inggris!', 'error');
+    } else {
+        showToast('Peringatan', 'Tidak ada keyword baru yang valid untuk ditambahkan.', 'warning');
+    }
+
 }
+
 
 function handleKeywordKeydown(event, assetId) {
     if (event.key === 'Enter') {
@@ -892,6 +1063,117 @@ function removeAsset(id) {
         updateStats();
         renderAssets();
         showToast('Aset Dihapus', 'Gambar dihapus dari daftar.', 'info');
+    }
+}
+
+// Custom Rules Panel UI Handler & Persistence
+function loadCustomRulesStorage() {
+    try {
+        const saved = localStorage.getItem('stockmeta_custom_rules');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            state.customRules = { ...state.customRules, ...parsed };
+        }
+    } catch (e) {
+        console.warn("Gagal load custom rules:", e);
+    }
+}
+
+function saveCustomRulesStorage() {
+    try {
+        localStorage.setItem('stockmeta_custom_rules', JSON.stringify(state.customRules));
+    } catch (e) {
+        console.warn("Gagal save custom rules:", e);
+    }
+}
+
+function syncCustomRulesUI() {
+    const elBanned = document.getElementById('customBannedKeywords');
+    const elMandatory = document.getElementById('customMandatoryKeywords');
+    const elMandatoryAtEnd = document.getElementById('customMandatoryAtEnd');
+    const elTitle = document.getElementById('customTitlePattern');
+    const elDesc = document.getElementById('customDescPattern');
+    const elEnglish = document.getElementById('customStrictEnglish');
+
+    if (elBanned) elBanned.value = state.customRules.bannedKeywords || '';
+    if (elMandatory) elMandatory.value = state.customRules.mandatoryKeywords || '';
+    if (elMandatoryAtEnd) elMandatoryAtEnd.checked = !!state.customRules.mandatoryAtEnd;
+    if (elTitle) elTitle.value = state.customRules.titlePattern || '';
+    if (elDesc) elDesc.value = state.customRules.descriptionPattern || '';
+    if (elEnglish) elEnglish.checked = state.customRules.strictEnglish !== false;
+
+    updateCustomBoxExpandState();
+}
+
+function updateCustomBoxExpandState() {
+    const content = document.getElementById('customRulesContent');
+    const icon = document.getElementById('toggleCustomBoxIcon');
+    const text = document.getElementById('toggleCustomBoxText');
+    if (!content) return;
+
+    if (state.customRules.isExpanded) {
+        content.classList.remove('hidden');
+        if (icon) icon.className = 'fa-solid fa-chevron-up text-indigo-400';
+        if (text) text.textContent = 'Sembunyikan';
+    } else {
+        content.classList.add('hidden');
+        if (icon) icon.className = 'fa-solid fa-chevron-down text-indigo-400';
+        if (text) text.textContent = 'Tampilkan';
+    }
+}
+
+function initCustomRulesEvents() {
+    loadCustomRulesStorage();
+    syncCustomRulesUI();
+
+    const btnSave = document.getElementById('btnSaveCustomRules');
+    const btnReset = document.getElementById('btnResetCustomRules');
+    const btnToggle = document.getElementById('btnToggleCustomBox');
+
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            const elBanned = document.getElementById('customBannedKeywords');
+            const elMandatory = document.getElementById('customMandatoryKeywords');
+            const elMandatoryAtEnd = document.getElementById('customMandatoryAtEnd');
+            const elTitle = document.getElementById('customTitlePattern');
+            const elDesc = document.getElementById('customDescPattern');
+            const elEnglish = document.getElementById('customStrictEnglish');
+
+            state.customRules.bannedKeywords = elBanned ? elBanned.value.trim() : '';
+            state.customRules.mandatoryKeywords = elMandatory ? elMandatory.value.trim() : '';
+            state.customRules.mandatoryAtEnd = elMandatoryAtEnd ? elMandatoryAtEnd.checked : false;
+            state.customRules.titlePattern = elTitle ? elTitle.value.trim() : '';
+            state.customRules.descriptionPattern = elDesc ? elDesc.value.trim() : '';
+            state.customRules.strictEnglish = elEnglish ? elEnglish.checked : true;
+
+            saveCustomRulesStorage();
+            const posText = state.customRules.mandatoryAtEnd ? 'urutan akhir' : 'urutan awal';
+            showToast('Custom Rules Disimpan', `Custom rules disimpan! Mandatory tags diposisikan di ${posText}.`, 'success');
+            addLog(`[CUSTOM RULES] Rules disimpan: Banned [${state.customRules.bannedKeywords}], Mandatory [${state.customRules.mandatoryKeywords}] (Posisi: ${posText})`, 'info');
+        });
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener('click', () => {
+            state.customRules.bannedKeywords = '';
+            state.customRules.mandatoryKeywords = '';
+            state.customRules.mandatoryAtEnd = false;
+            state.customRules.titlePattern = '';
+            state.customRules.descriptionPattern = '';
+            state.customRules.strictEnglish = true;
+
+            saveCustomRulesStorage();
+            syncCustomRulesUI();
+            showToast('Custom Rules Direset', 'Semua aturan custom dikembalikan ke default.', 'info');
+        });
+    }
+
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            state.customRules.isExpanded = !state.customRules.isExpanded;
+            saveCustomRulesStorage();
+            updateCustomBoxExpandState();
+        });
     }
 }
 
@@ -975,6 +1257,8 @@ function loadDemoSamples() {
 
 // Global Event Listeners Init
 window.addEventListener('DOMContentLoaded', async () => {
+    initCustomRulesEvents();
+
     // DropZone & File Picker
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -1357,6 +1641,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.handleKeywordKeydown = handleKeywordKeydown;
     window.updateAssetTitle = updateAssetTitle;
     window.updateAssetDesc = updateAssetDesc;
+    window.autoInjectMetadata = autoInjectMetadata;
+    window.autoInjectMetadataById = autoInjectMetadataById;
+
 
     // In-App Auto-Update System Logic
     let activeUpdatePayload = null;
@@ -1577,6 +1864,42 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (logFilterAll) logFilterAll.addEventListener('click', () => setActiveLogFilter(logFilterAll, 'all'));
     if (logFilterError) logFilterError.addEventListener('click', () => setActiveLogFilter(logFilterError, 'error'));
     if (logFilterSuccess) logFilterSuccess.addEventListener('click', () => setActiveLogFilter(logFilterSuccess, 'success'));
+
+    const antiGravitySignin = document.getElementById('antiGravitySignin');
+    const antiGravityForm = document.getElementById('antiGravityForm');
+    const antiPasswordInput = document.getElementById('antiGravityPassword');
+    const toggleAntiPassword = document.getElementById('toggleAntiPassword');
+    const closeAuthOverlay = document.getElementById('closeAuthOverlay');
+
+    if (antiGravityForm && antiGravitySignin) {
+        antiGravityForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const email = document.getElementById('antiGravityEmail').value.trim();
+            const password = antiPasswordInput.value.trim();
+
+            if (!email || !password) {
+                showToast('Incomplete sign in', 'Enter both email and password to continue.', 'warning');
+                return;
+            }
+
+            showToast('Welcome aboard', `Access granted for ${email}.`, 'success');
+            antiGravitySignin.classList.add('hidden');
+        });
+    }
+
+    if (toggleAntiPassword && antiPasswordInput) {
+        toggleAntiPassword.addEventListener('click', () => {
+            const isHidden = antiPasswordInput.type === 'password';
+            antiPasswordInput.type = isHidden ? 'text' : 'password';
+            toggleAntiPassword.innerHTML = isHidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        });
+    }
+
+    if (closeAuthOverlay && antiGravitySignin) {
+        closeAuthOverlay.addEventListener('click', () => {
+            antiGravitySignin.classList.add('hidden');
+        });
+    }
 
     // License Modal Controls
     const licenseModal = document.getElementById('licenseModal');

@@ -22,6 +22,72 @@
 
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
+    <div id="antiGravitySignin" class="anti-gravity-signin hidden">
+        <div class="anti-gravity-backdrop"></div>
+        <div class="anti-gravity-orbits" aria-hidden="true">
+            <span class="orb orb-one"></span>
+            <span class="orb orb-two"></span>
+            <span class="orb orb-three"></span>
+            <span class="orb orb-four"></span>
+        </div>
+
+        <div class="anti-gravity-panel">
+            <div class="brand-mark">
+                <img src="public/icon.jpg" alt="StockMeta Logo" class="brand-icon" />
+                <div class="brand-copy">
+                    <span class="brand-name">StockMeta<span class="brand-accent">.AI</span></span>
+                    <span class="brand-tag">ANTI-GRAVITY ACCESS</span>
+                </div>
+            </div>
+
+            <div class="signin-header">
+                <p class="eyebrow">Mission control</p>
+                <h1>Sign in to the orbit</h1>
+                <p class="subtitle">Resume your metadata workflow and keep the AI pipeline in sync.</p>
+            </div>
+
+            <form id="antiGravityForm" class="signin-form">
+                <label class="field-label" for="antiGravityEmail">
+                    Workspace email
+                </label>
+                <input id="antiGravityEmail" type="email" placeholder="pilot@brkh.studio" required />
+
+                <label class="field-label" for="antiGravityPassword">
+                    Password
+                </label>
+                <div class="password-wrap">
+                    <input id="antiGravityPassword" type="password" placeholder="Enter your password" required />
+                    <button type="button" class="toggle-password" id="toggleAntiPassword" aria-label="Toggle password visibility">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+
+                <div class="meta-row">
+                    <label class="remember-toggle">
+                        <input type="checkbox" />
+                        <span>Keep me signed in</span>
+                    </label>
+                    <a href="#" class="inline-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="submit-button">
+                    <span>Sign in</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+                <div class="divider"><span>or continue with</span></div>
+
+                <div class="social-row">
+                    <button type="button" class="social-button"><i class="fa-brands fa-google"></i> Google</button>
+                    <button type="button" class="social-button"><i class="fa-brands fa-github"></i> GitHub</button>
+                </div>
+            </form>
+
+            <p class="signup-copy">Need a workspace invite? <a href="#">Request access</a></p>
+            <button id="closeAuthOverlay" type="button" class="ghost-button">Continue to dashboard</button>
+        </div>
+    </div>
+
     <!-- Header Navigation -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -183,6 +249,111 @@
                 <div>
                     <div class="text-xs text-slate-400 font-medium">Worker Paralel</div>
                     <div id="statConcurrency" class="text-lg font-bold text-blue-400">2 Threads (Pacing 2.5s)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KOTAK KHUSUS CUSTOM PATTERN & RULE KURASI -->
+        <div id="customRulesBox" class="bg-gradient-to-r from-slate-900/90 via-indigo-950/40 to-slate-900/90 border border-indigo-500/30 rounded-2xl p-4 sm:p-5 shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between gap-3 border-b border-slate-800/80 pb-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-base shadow-sm">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-extrabold text-white text-sm sm:text-base tracking-tight">Kotak Khusus Custom Pattern & Rules Kurasi</h3>
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                                CUSTOM RULES
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400">Atur kata kunci dilarang, kata kunci wajib, kurasi bahasa inggris ketat, serta pola template Title & Description.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btnToggleCustomBox" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5">
+                        <i id="toggleCustomBoxIcon" class="fa-solid fa-chevron-up text-indigo-400"></i>
+                        <span id="toggleCustomBoxText">Sembunyikan</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="customRulesContent" class="space-y-4 text-xs transition-all duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 1. Kata Kunci Dilarang (Banned Keywords) -->
+                    <div class="bg-slate-950/70 border border-rose-900/40 rounded-xl p-3.5 space-y-2">
+                        <label for="customBannedKeywords" class="font-bold text-rose-300 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-ban text-rose-400"></i>
+                            <span>Kata Kunci Dilarang (Custom Banned Keywords)</span>
+                        </label>
+                        <textarea id="customBannedKeywords" rows="2" placeholder="Masukkan kata kunci yang dilarang dipisah koma atau baris baru...&#10;Contoh: isolated, white background, vector art, ai generated" class="w-full bg-slate-900/90 border border-rose-950/80 focus:border-rose-500 rounded-lg p-2.5 text-slate-200 placeholder:text-slate-600 focus:outline-none resize-none font-mono text-xs"></textarea>
+                        <p class="text-[11px] text-slate-400 leading-tight">
+                            <i class="fa-solid fa-shield-halved text-rose-400 mr-1"></i> Setiap kata di atas akan DIBUANG secara otomatis dari keyword output.
+                        </p>
+                    </div>
+
+                    <!-- 2. Kata Kunci Wajib (Mandatory Keywords) -->
+                    <div class="bg-slate-950/70 border border-emerald-900/40 rounded-xl p-3.5 space-y-2">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <label for="customMandatoryKeywords" class="font-bold text-emerald-300 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-thumbtack text-emerald-400"></i>
+                                <span>Kata Kunci Wajib (Mandatory Included Tags)</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-emerald-300 hover:text-white bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                                <input type="checkbox" id="customMandatoryAtEnd" class="w-3.5 h-3.5 accent-emerald-500 rounded" />
+                                <span>Taruh di Urutan Akhir</span>
+                            </label>
+                        </div>
+                        <textarea id="customMandatoryKeywords" rows="2" placeholder="Masukkan kata kunci yang wajib dimasukkan dipisah koma atau baris baru...&#10;Contoh: vector, illustration, graphic, design, background" class="w-full bg-slate-900/90 border border-emerald-950/80 focus:border-emerald-500 rounded-lg p-2.5 text-slate-200 placeholder:text-slate-600 focus:outline-none resize-none font-mono text-xs"></textarea>
+                        <p class="text-[11px] text-slate-400 leading-tight">
+                            <i class="fa-solid fa-star text-emerald-400 mr-1"></i> Kata kunci ini WAJIB selalu dimasukkan (di urutan <strong class="text-emerald-300">akhir</strong> jika dicentang, atau di <strong class="text-emerald-300">awal</strong> jika tidak dicentang).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 3. Pola Template Title -->
+                    <div class="bg-slate-950/70 border border-indigo-900/40 rounded-xl p-3.5 space-y-2">
+                        <label for="customTitlePattern" class="font-bold text-indigo-300 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-heading text-indigo-400"></i>
+                            <span>Pola Template Title (Custom Title Pattern)</span>
+                        </label>
+                        <input id="customTitlePattern" type="text" placeholder="Contoh: Vector illustration of {title} for commercial banner" class="w-full bg-slate-900/90 border border-indigo-950/80 focus:border-indigo-500 rounded-lg p-2.5 text-slate-200 placeholder:text-slate-600 focus:outline-none font-mono text-xs" />
+                        <p class="text-[11px] text-slate-400 leading-tight">
+                            Gunakan tag <code class="text-indigo-300 font-bold">{title}</code> sebagai placeholder judul otomatis AI.
+                        </p>
+                    </div>
+
+                    <!-- 4. Pola Template Description -->
+                    <div class="bg-slate-950/70 border border-purple-900/40 rounded-xl p-3.5 space-y-2">
+                        <label for="customDescPattern" class="font-bold text-purple-300 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-align-left text-purple-400"></i>
+                            <span>Pola Template Description (Custom Description Pattern)</span>
+                        </label>
+                        <input id="customDescPattern" type="text" placeholder="Contoh: {description} High quality resolution file suitable for web and print." class="w-full bg-slate-900/90 border border-purple-950/80 focus:border-purple-500 rounded-lg p-2.5 text-slate-200 placeholder:text-slate-600 focus:outline-none font-mono text-xs" />
+                        <p class="text-[11px] text-slate-400 leading-tight">
+                            Gunakan tag <code class="text-purple-300 font-bold">{description}</code> sebagai placeholder deskripsi AI.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="customStrictEnglish" checked class="w-4 h-4 accent-indigo-500 rounded" />
+                        <span class="font-semibold text-slate-200 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-earth-americas text-sky-400"></i>
+                            <span>Kurasi Ketat 100% Bahasa Inggris (Strict English Only Filter)</span>
+                        </span>
+                    </label>
+
+                    <div class="flex items-center gap-2">
+                        <button id="btnResetCustomRules" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Reset Custom
+                        </button>
+                        <button id="btnSaveCustomRules" type="button" class="px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-indigo-600/30">
+                            <i class="fa-solid fa-check mr-1"></i> Simpan Custom Rules
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -537,9 +708,33 @@
                         <div class="text-slate-400 leading-relaxed">Sistem meriset kueri pencarian pembeli real-time dari Google & Bing, menyaring kata-kata tunggal (*single word High-CTR*), serta menempatkan 10 tag bernilai komersial tertinggi di urutan awal (aturan Adobe Stock 10-first).</div>
                     </div>
                 </div>
+
+                <!-- Section 3: Contact Me & Support -->
+                <div class="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 p-4 border border-emerald-500/40 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0 shadow-md">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                <span>Contact Me & Customer Support</span>
+                                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 font-extrabold">BRKH STUDIO</span>
+                            </h4>
+                            <p class="text-[11px] text-slate-300 mt-0.5">Butuh bantuan teknis, saran fitur baru, atau lisensi khusus? Hubungi pengembang BRKH STUDIO langsung via WhatsApp.</p>
+                        </div>
+                    </div>
+                    <a href="https://api.whatsapp.com/send/?phone=%2B6283862300495&text&type=phone_number&app_absent=0" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shrink-0 shadow-md shadow-emerald-600/30">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>Contact Me</span>
+                    </a>
+                </div>
             </div>
 
-            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800 mt-3">
+            <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800 mt-3">
+                <a href="https://api.whatsapp.com/send/?phone=%2B6283862300495&text&type=phone_number&app_absent=0" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white rounded-lg text-xs font-semibold border border-emerald-500/40 transition flex items-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>Contact Me (WhatsApp)</span>
+                </a>
                 <button id="btnCloseFAQBottom" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition">
                     Tutup Panduan
                 </button>

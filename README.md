@@ -32,6 +32,7 @@ StockMeta Studio by BRKH STUDIO adalah aplikasi desktop mandiri berbasis Python 
 
 ## 📁 Struktur Dokumentasi
 
+* 📊 [`WORKFLOW_MERMAID.md`](./WORKFLOW_MERMAID.md): **[PANDUAN ALUR KERJA LENGKAP & DIAGRAM MERMAID]** (Instalasi -> Konfigurasi Custom Rules -> Gemini AI -> Direct Binary IPTC/EXIF Injection)
 * 🤖 [`doc/agents.md`](./doc/agents.md): Peta Utama Arsitektur, Fungsi & Alur Data untuk AI Agent
 * 📐 [`doc/architecture.md`](./doc/architecture.md): Arsitektur Perangkat Lunak & Diagram Sistem
 * 📖 [`doc/documentation.md`](./doc/documentation.md): Panduan Pengguna & Pengembang Lengkap

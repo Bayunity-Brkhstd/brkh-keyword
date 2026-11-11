@@ -1,4 +1,5 @@
 import re
+from core.language_filter import filter_english_keywords, is_english_keyword
 
 class KeywordAnalyzer:
     """
@@ -29,7 +30,7 @@ class KeywordAnalyzer:
         Calculates Commercial / Buyer Intent Score (0.0 to 100.0) for a keyword.
         """
         kw_clean = str(keyword).lower().strip()
-        if not kw_clean or len(kw_clean) <= 2:
+        if not kw_clean or len(kw_clean) <= 2 or not is_english_keyword(kw_clean):
             return 0.0
 
         score = 50.0  # Base score for valid single-word keywords
@@ -52,12 +53,13 @@ class KeywordAnalyzer:
         """
         Scores keywords and ranks them so that top 10 positions contain high commercial intent
         and core subject keywords, moving passive words to the end.
-        Strictly returns deduplicated single-word keywords.
+        Strictly returns deduplicated single-word English keywords.
         """
+        english_only = filter_english_keywords(keywords)
         seen = set()
         clean_list = []
 
-        for kw in keywords:
+        for kw in english_only:
             k = str(kw).lower().strip()
             # Enforce single word without spaces
             if k and ' ' not in k and len(k) > 2 and k not in seen:
@@ -71,6 +73,7 @@ class KeywordAnalyzer:
         scored.sort(key=lambda item: item[1], reverse=True)
 
         return [item[0] for item in scored]
+
 
 if __name__ == "__main__":
     analyzer = KeywordAnalyzer()

@@ -1,5 +1,6 @@
 import httpx
 import re
+from core.language_filter import is_english_keyword
 
 class BuyerDemandFetcher:
     def __init__(self):
@@ -14,13 +15,14 @@ class BuyerDemandFetcher:
         }
 
     def clean_and_tokenize(self, text: str) -> list[str]:
-        """Membersihkan frasa dan membuang stop words microstock"""
+        """Membersihkan frasa dan membuang stop words & non-English keywords"""
         cleaned_words = []
         tokens = re.findall(r'[a-zA-Z]+', text.lower())
         for word in tokens:
-            if word not in self.stop_words and len(word) > 2:
+            if word not in self.stop_words and len(word) > 2 and is_english_keyword(word):
                 cleaned_words.append(word)
         return cleaned_words
+
 
     def fetch_suggestions(self, seed_query: str) -> list[str]:
         collected_phrases = set()

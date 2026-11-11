@@ -8,7 +8,7 @@
 ## 📌 1. Ringkasan Proyek
 
 - **Nama Aplikasi**: StockMeta Studio (v1.0.0)
-- **Pengembang**: BRKH STUDIO
+- **Pengembang**: BRKH STUDIO / Bayunity
 - **Teknologi Utama**: Python 3.10+, PyWebView (Edge WebView2), Vanilla JS (ES6), Tailwind CSS, FontAwesome 6, Pillow, IPTCInfo3, httpx.
 - **Tujuan Utama**: Otomatisasi analisis visual aset microstock (JPG/EPS) berbasis Google Gemini Vision AI, penulisan metadata biner langsung ke header EXIF/IPTC fisik tanpa file locking, dan sistem In-App Auto-Update mandiri.
 
@@ -64,7 +64,8 @@ StockMetaStudio/
 | **`main.py`** | `DesktopBridge` | Kelas bridge utama yang diekspos ke JS API PyWebView via `window.pywebview.api`. |
 | `main.py` | `select_files()` | Membuka native file dialog Windows untuk memilih file gambar (JPG). |
 | `main.py` | `get_image_preview_b64()` | Mengenerate thumbnail Base64 (max 280px) hemat RAM untuk bypass CORS `file://`. |
-| `main.py` | `process_and_save()` | Orkestrator utama: Memanggil AI Curator -> Buyer Demand -> Scoring -> IPTC/EPS Injection. |
+| `main.py` | `apply_custom_rules_to_metadata()` | Memproses format pola Title, Description, kata kunci dilarang (banned), kata kunci wajib (mandatory), & kurasi ketat 100% Bahasa Inggris. |
+| `main.py` | `process_and_save()` | Orkestrator utama: Memanggil AI Curator -> Buyer Demand -> Scoring -> Custom Rules -> IPTC/EPS Injection. |
 | `main.py` | `save_api_keys()`, `get_api_keys()` | Manajemen simpan/muat hingga 30 API Key Gemini ke `~/.stockmeta_config.json`. |
 | `main.py` | `check_for_updates()`, `apply_update()` | Ekspos fitur auto-update dari `core/updater.py` ke frontend JS. |
 | **`core/updater.py`** | `check_for_updates()` | Mengambil `version.json` via `httpx` (timeout 5s) & membandingkan versi SemVer. |
@@ -73,6 +74,7 @@ StockMetaStudio/
 | **`core/iptc_injector.py`** | `IPTCInjector` | Menulis EXIF Details (`XPTitle`, `XPKeywords`) via Pillow BytesIO, header IPTC biner via `iptcinfo3`, dan XMP packet ke file `.eps` pasangan di folder yang sama. |
 | **`core/buyer_demand.py`** | `BuyerDemandFetcher` | Meriset kueri pencarian komersial nyata dari Google/Bing & menyaring tag kata tunggal bernilai jual tinggi. |
 | **`core/keyword_analyzer.py`** | `KeywordAnalyzer` | Menilai Skor Komersial (0-100), mendemosi kata pasif visual (`isolated`, `white`), dan menaruh 10 kata kunci utama di urutan awal. |
+| **`core/language_filter.py`** | `filter_english_keywords()` | Menyaring 100% keyword Bahasa Inggris murni, mengecek ASCII, kamus Indonesia, dan membuang custom banned keywords. |
 | **`core/keyword_cluster.py`** | `KeywordClusterer` | Pengelompokan hierarki kata kunci & pencegahan kata kunci duplikat pada aset serial. |
 | **`core/path_utils.py`** | `normalize_path()` | Menangani normalisasi slash path Windows & prefix `\\?\` untuk Windows Long Path. |
 

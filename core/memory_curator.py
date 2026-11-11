@@ -4,6 +4,8 @@ import time
 import gc
 from PIL import Image
 from core.path_utils import normalize_path
+from core.language_filter import filter_english_keywords
+
 
 class SafeMemoryCurator:
     """
@@ -116,35 +118,37 @@ class SafeMemoryCurator:
 
         system_prompt = f"""Kamu adalah kurator metadata aset microstock profesional kelas dunia untuk agensi terkemuka (Adobe Stock, Shutterstock, Freepik, Getty Images).
 
+SYARAT BAHASA MUTLAK (STRICT ENGLISH MANDATE):
+- DILARANG KERAS MENYISIPKAN KEYWORD/TITLE/DESCRIPTION DALAM BAHASA INDONESIA ATAU BAHASA APAPUN SELAIN BAHASA INGGRIS!
+- ALL KEYWORDS, TITLES, AND DESCRIPTIONS MUST BE 100% STRICTLY AND EXCLUSIVELY IN PURE ENGLISH.
+- DO NOT INCLUDE ANY INDONESIAN WORDS (Contoh DILARANG: "gambar", "desain", "vektor", "hiasan", "latar", "belakang", "pola", "stiker", "merah", "biru", dll).
+
 TUGAS UTAMA:
-Menganalisis gambar aset digital secara visual dan menghasilkan metadata komersial yang presisi, relevan, dan terbebas dari pelanggaran hak cipta.
+Menganalisis gambar aset digital secara visual dan menghasilkan metadata komersial murni bahasa Inggris yang presisi, relevan, dan terbebas dari pelanggaran hak cipta.
 {f'PETUNJUK KATEGORI TEMA: {theme_text}' if theme_text else ''}
 
 ATURAN TITLE:
-- Buat 1 judul deskriptif bahasa Inggris dengan panjang antara 60 sampai 90 karakter.
-- Wajib gunakan pola judul: [Karakteristik Visual Utama / Subjek] + [Gaya / Format Aset] + [Konteks Penggunaan].
+- Buat 1 judul deskriptif bahasa Inggris murni (60 - 90 karakter).
+- Wajib gunakan pola judul: [Visual Subject] + [Style/Format] + [Usage Context].
   (Contoh: "Gold Trophy on Podium 3D Render for Achievement Celebration Award")
-- Hindari keyword stuffing (dilarang menumpuk kata yang sama).
-- Jangan gunakan tanda baca aneh atau simbol berlebihan (hindari: |, !, #, @, emoji).
 
 ATURAN DESCRIPTION:
-- Buat 1-2 kalimat bahasa Inggris yang menjelaskan subjek visual, elemen pendukung, palet/nuansa, dan fleksibilitas penggunaannya untuk proyek komersial.
+- Buat 1-2 kalimat bahasa Inggris murni yang menjelaskan subjek visual dan fungsi komersialnya.
 
 ATURAN KEYWORDS:
 1. Format Kata Kunci:
+   - WAJIB 100% BAHASA INGGRIS (STRICTLY ENGLISH ONLY).
    - Wajib huruf kecil semua (lowercase).
-   - Setiap elemen keyword HARUS berupa 1 KATA TUNGGAL (single word, tanpa spasi). Jika ada konsep gabungan, pecah menjadi kata mandiri yang relevan (misal: "hair cut" -> "hair", "cut"; "barber shop" -> "barbershop", "barber", "shop").
-   - Hapus semua tanda baca, angka, atau simbol (hanya karakter huruf a-z).
-2. Jumlah: Hasilkan tepat antara {min_kw} sampai {max_kw} kata kunci yang unik (tanpa duplikasi).
-3. Hierarki & Urutan Relevansi (Wajib urutkan dari kata 1 sampai selesai):
-   - Level 1 (Kata 1-10): Subjek literal dan teks eksplisit yang terlihat pada gambar.
-   - Level 2 (Kata 11-20): Gaya desain, estetika visual, palet warna dominan, dan format teknis (contoh: vector, editable, vintage, blue, typography).
-   - Level 3 (Kata 21-35): Objek pendukung, metafora, dan elemen sekunder di latar belakang.
-   - Level 4 (Kata 36-selesai): Kasus penggunaan komersial dan target media (contoh: banner, poster, signage, branding, template).
-4. Larangan Mutlak (Negative Rules):
-   - Dilarang menyertakan nama merek dagang/brand/trademark (contoh: Photoshop, Illustrator, Apple, Instagram).
-   - Dilarang menyertakan kata-kata tidak bermakna seperti 'the', 'and', 'image', 'picture', 'photo' (jika aset bukan fotografi).
-   - Dilarang memasukkan kata yang tidak memiliki kaitan visual langsung dengan gambar.
+   - Hapus semua tanda baca atau simbol.
+2. Jumlah: Hasilkan tepat antara {min_kw} sampai {max_kw} kata kunci unik bahasa Inggris.
+3. Hierarki & Urutan Relevansi (Urutkan dari paling utama):
+   - Level 1 (Kata 1-10): Subjek utama yang terlihat di gambar.
+   - Level 2 (Kata 11-20): Gaya desain, warna, dan format teknis (vector, 3d, isometric, illustration).
+   - Level 3 (Kata 21-35): Objek pendukung dan elemen sekunder.
+   - Level 4 (Kata 36-selesai): Penggunaan komersial (banner, poster, template, branding).
+4. Larangan Mutlak:
+   - DILARANG ADA KATA BAHASA INDONESIA ATAU NON-INGGRIS.
+   - Dilarang merek dagang (Photoshop, Illustrator, Apple, dll).
 
 {f'CATATAN TAMBAHAN DARI PENGGUNA: {notes}' if notes else ''}"""
 
@@ -157,7 +161,7 @@ ATURAN KEYWORDS:
                 "keywords": {
                     "type": "ARRAY",
                     "items": {"type": "STRING"},
-                    "description": f"Strictly {min_kw} to {max_kw} unique single-word lowercase keywords"
+                    "description": f"Strictly {min_kw} to {max_kw} unique single-word lowercase ENGLISH keywords"
                 }
             },
             "required": ["title", "description", "assetType", "keywords"]
@@ -226,7 +230,11 @@ ATURAN KEYWORDS:
 
                     del img_bytes
                     gc.collect()
-                    return json.loads(text_content)
+                    parsed = json.loads(text_content)
+                    if isinstance(parsed, dict) and "keywords" in parsed:
+                        parsed["keywords"] = filter_english_keywords(parsed["keywords"])
+                    return parsed
+
 
                 except Exception as e:
                     err_str = str(e)

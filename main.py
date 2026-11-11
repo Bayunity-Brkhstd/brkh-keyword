@@ -13,6 +13,8 @@ from core.keyword_analyzer import KeywordAnalyzer
 from core.keyword_cluster import KeywordClusterer
 from core.keyword_serp import KeywordSERP
 from core.updater import check_for_updates, apply_update, CURRENT_VERSION
+from core.language_filter import filter_english_keywords
+
 
 
 class DesktopBridge:
@@ -199,7 +201,93 @@ class DesktopBridge:
                 })
         return results
 
-    def process_and_save(self, file_path: str, min_kw: int = 35, max_kw: int = 45, notes: str = "", niche_theme: str = "auto") -> dict:
+    def apply_custom_rules_to_metadata(self, title: str, description: str, keywords: list, custom_rules: dict = None, min_kw: int = 35, max_kw: int = 45) -> tuple:
+        """
+        Applies custom title patterns, description patterns, mandatory keywords, and banned keyword filters.
+        Strictly enforces 100% English curation.
+        """
+        import re
+        if not custom_rules or not isinstance(custom_rules, dict):
+            custom_rules = {}
+
+        banned_raw = custom_rules.get("bannedKeywords", custom_rules.get("banned_keywords", ""))
+        mandatory_raw = custom_rules.get("mandatoryKeywords", custom_rules.get("mandatory_keywords", ""))
+        title_pattern = str(custom_rules.get("titlePattern", custom_rules.get("title_pattern", ""))).strip()
+        desc_pattern = str(custom_rules.get("descriptionPattern", custom_rules.get("description_pattern", ""))).strip()
+
+        # Parse Banned Keywords List
+        banned_list = []
+        if isinstance(banned_raw, str) and banned_raw.strip():
+            banned_list = [b.strip() for b in re.split(r'[,;\n]+', banned_raw) if b.strip()]
+        elif isinstance(banned_raw, list):
+            banned_list = [str(b).strip() for b in banned_raw if str(b).strip()]
+
+        # Parse Mandatory Keywords List
+        mandatory_list = []
+        if isinstance(mandatory_raw, str) and mandatory_raw.strip():
+            mandatory_list = [m.strip() for m in re.split(r'[,;\n]+', mandatory_raw) if m.strip()]
+        elif isinstance(mandatory_raw, list):
+            mandatory_list = [str(m).strip() for m in mandatory_raw if str(m).strip()]
+
+        # Apply Title Pattern
+        formatted_title = title.strip()
+        if title_pattern:
+            if "{title}" in title_pattern:
+                formatted_title = title_pattern.replace("{title}", title.strip())
+            else:
+                formatted_title = f"{title_pattern} {title.strip()}".strip()
+
+        # Apply Description Pattern
+        formatted_desc = description.strip()
+        if desc_pattern:
+            if "{description}" in desc_pattern:
+                formatted_desc = desc_pattern.replace("{description}", description.strip())
+            else:
+                formatted_desc = f"{desc_pattern} {description.strip()}".strip()
+
+        # Filter Keywords: Strict English + Custom Banned Keywords Filter
+        clean_kw = filter_english_keywords(keywords, custom_banned_list=banned_list)
+
+        # Prepend or Append Mandatory Keywords based on mandatoryAtEnd setting
+        mandatory_at_end = custom_rules.get("mandatoryAtEnd", custom_rules.get("mandatory_at_end", False))
+        clean_mandatory = filter_english_keywords(mandatory_list, custom_banned_list=banned_list)
+        
+        final_keywords = []
+        seen = set()
+        
+        if mandatory_at_end:
+            # First place AI keywords, then append mandatory keywords at the end
+            for kw in clean_kw:
+                k_clean = kw.lower().strip()
+                if k_clean not in seen:
+                    seen.add(k_clean)
+                    final_keywords.append(k_clean)
+
+            for mkw in clean_mandatory:
+                m_clean = mkw.lower().strip()
+                if m_clean not in seen:
+                    seen.add(m_clean)
+                    final_keywords.append(m_clean)
+        else:
+            # Default: place mandatory keywords at the beginning (awal)
+            for mkw in clean_mandatory:
+                m_clean = mkw.lower().strip()
+                if m_clean not in seen:
+                    seen.add(m_clean)
+                    final_keywords.append(m_clean)
+
+            for kw in clean_kw:
+                k_clean = kw.lower().strip()
+                if k_clean not in seen:
+                    seen.add(k_clean)
+                    final_keywords.append(k_clean)
+
+        if max_kw > 0:
+            final_keywords = final_keywords[:max_kw]
+
+        return formatted_title, formatted_desc, final_keywords
+
+    def process_and_save(self, file_path: str, min_kw: int = 35, max_kw: int = 45, notes: str = "", niche_theme: str = "auto", custom_rules: dict = None) -> dict:
         if not self.api_keys or not self.curator:
             return {
                 "status": "error",
@@ -219,12 +307,25 @@ class DesktopBridge:
 
 
         try:
+            # Append custom rules into prompt guidance notes if available
+            prompt_notes = notes
+            if custom_rules and isinstance(custom_rules, dict):
+                banned_str = custom_rules.get("bannedKeywords", "")
+                mandatory_str = custom_rules.get("mandatoryKeywords", "")
+                rule_hints = []
+                if banned_str:
+                    rule_hints.append(f"DILARANG MENGGUNAKAN KATA: {banned_str}")
+                if mandatory_str:
+                    rule_hints.append(f"WAJIB MASUKKAN KATA KUNCI: {mandatory_str}")
+                if rule_hints:
+                    prompt_notes = f"{notes} | {'; '.join(rule_hints)}".strip(" |")
+
             # 1. Vision AI Curation with Auto-Rolling API Key Rotation & Theme Guidance
             metadata = self.curator.curate(
                 file_path=file_path,
                 min_kw=min_kw,
                 max_kw=max_kw,
-                notes=notes,
+                notes=prompt_notes,
                 niche_theme=niche_theme
             )
 
@@ -261,12 +362,27 @@ class DesktopBridge:
                 # Clustering Tiers & Structural deduplication
                 clustered = self.clusterer.cluster_keywords(ranked_kw)
 
-                # Enforce min_kw & max_kw boundary strictly
-                keywords = ranked_kw[:max_kw]
-                metadata["keywords"] = keywords
+                # Enforce 100% English filter & min_kw/max_kw boundary strictly
+                banned_kw_list = []
+                if custom_rules and isinstance(custom_rules, dict):
+                    b_raw = custom_rules.get("bannedKeywords", "")
+                    if isinstance(b_raw, str) and b_raw.strip():
+                        banned_kw_list = [b.strip() for b in re.split(r'[,;\n]+', b_raw) if b.strip()]
+                keywords = filter_english_keywords(ranked_kw, custom_banned_list=banned_kw_list)[:max_kw]
+
             except Exception as err:
                 print(f"[SEO Pipeline Warning] Gagal memproses pipeline tambahan: {err}")
             # ---------------------------------------------------------------------------------------------
+
+            # Apply Custom Rules (Title Pattern, Description Pattern, Mandatory Keywords, Banned Filter)
+            title, description, keywords = self.apply_custom_rules_to_metadata(
+                title=title,
+                description=description,
+                keywords=keywords,
+                custom_rules=custom_rules,
+                min_kw=min_kw,
+                max_kw=max_kw
+            )
 
             # 2. Binary IPTC + EXIF XPTitle/XPSubject/XPKeywords Injection directly into local JPG
             embedded_iptc = self.injector.embed_to_jpg(
@@ -313,6 +429,66 @@ class DesktopBridge:
                 "status": "error",
                 "message": str(e)
             }
+
+    def reinject_metadata(self, file_path: str, title: str = "", description: str = "", keywords: list = None, custom_rules: dict = None) -> dict:
+        """
+        Suntik ulang / perbarui biner IPTC, EXIF (XPTitle/XPSubject/XPKeywords),
+        dan metadata EPS XMP langsung ke file lokal tanpa jalankan ulang kurasi AI.
+        """
+        if keywords is None:
+            keywords = []
+        file_path = normalize_path(file_path)
+        if not os.path.exists(file_path):
+            return {
+                "status": "error",
+                "message": f"File tidak ditemukan pada path: {file_path}"
+            }
+
+        try:
+            title, description, clean_kw = self.apply_custom_rules_to_metadata(
+                title=title,
+                description=description,
+                keywords=keywords,
+                custom_rules=custom_rules,
+                min_kw=0,
+                max_kw=50
+            )
+
+            embedded_iptc = self.injector.embed_to_jpg(
+                file_path=file_path,
+                title=title,
+                description=description,
+                keywords=clean_kw
+            )
+
+            eps_embedded = False
+            eps_filename = ""
+            base_path, _ = os.path.splitext(file_path)
+            eps_path = normalize_path(base_path + ".eps")
+            if os.path.exists(eps_path):
+                eps_embedded = self.injector.embed_to_eps(
+                    eps_path=eps_path,
+                    title=title,
+                    description=description,
+                    keywords=clean_kw
+                )
+                if eps_embedded:
+                    eps_filename = os.path.basename(eps_path)
+
+            gc.collect()
+            return {
+                "status": "success",
+                "iptcEmbedded": embedded_iptc,
+                "epsEmbedded": eps_embedded,
+                "epsFilename": eps_filename
+            }
+        except Exception as e:
+            gc.collect()
+            return {
+                "status": "error",
+                "message": f"Gagal auto-inject metadata: {str(e)}"
+            }
+
 
     def check_for_updates(self, custom_url: str = "") -> dict:
         """
